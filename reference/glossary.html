@@ -98,6 +98,15 @@
 
       <dt><code>sitemap.xml</code> <span class="tag both">BOTH</span></dt>
       <dd>A machine-readable list of your URLs (with metadata) that helps crawlers discover pages efficiently.</dd>
+
+      <dt><code>noindex</code> <span class="tag seo">SEO</span></dt>
+      <dd>A directive telling the engine to drop a page from the index. Lives in <code>&lt;meta name="robots"&gt;</code> or the <code>X-Robots-Tag</code> header. Only works if the page is <em>crawlable</em> — a blocked page's noindex is never read.</dd>
+
+      <dt><code>X-Robots-Tag</code> <span class="tag seo">SEO</span></dt>
+      <dd>An HTTP response header that carries indexing directives (like <code>noindex</code>) — the header-level equivalent of the robots meta tag. Useful for non-HTML files (PDFs, images).</dd>
+
+      <dt>Canonical <span class="tag both">BOTH</span></dt>
+      <dd>Via <code>&lt;link rel="canonical"&gt;</code>: declares which URL is the "real" one when several show near-identical content, so the engine consolidates signals onto one.</dd>
     </dl>
   </div>
 
