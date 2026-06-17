@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0005 · Measuring It</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e; --term:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .lede{font-size:1.12rem}
+  sup{font-size:.7em; color:var(--aeo)}
+
+  .recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo);
+    padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  .gotcha{border-left:3px solid var(--bad); background:#f9ece9; padding:.8rem 1.1rem; border-radius:.4rem; margin:1.5rem 0}
+  .gotcha b{color:var(--bad)}
+
+  /* side-by-side: classic (has API) vs AEO (proxy only) */
+  .twocol{display:flex; gap:1rem; flex-wrap:wrap; margin:1.4rem 0}
+  .col{flex:1 1 18rem; border:1px solid var(--rule); border-radius:.5rem; overflow:hidden; background:#fff}
+  .col .h{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; padding:.5rem .8rem; color:#fff}
+  .col.seo .h{background:var(--seo)}
+  .col.aeo .h{background:var(--aeo)}
+  .col .body{padding:.7rem .85rem; font-size:.88rem; line-height:1.5}
+  .col .body p{margin:.4rem 0}
+  .col .body .tag{display:block; margin-top:.5rem; font-size:.78rem; font-style:italic}
+  .col.seo .tag{color:var(--good)} .col.aeo .tag{color:var(--bad)}
+
+  table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.9rem}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+  pre{background:#1e1c18; color:#e8e2d4; padding:1rem 1.1rem; border-radius:.5rem; overflow:auto; font-size:.82rem; line-height:1.5}
+  pre .cm{color:#9a9486} pre .k{color:#9fd0e0} pre .s{color:#d8c89a}
+  .runbox{background:#101418; color:#cfe8d4; padding:.9rem 1.1rem; border-radius:.5rem; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre; overflow:auto; margin:1rem 0}
+  .runbox .hit{color:#7fd99a} .runbox .miss{color:#9a9486} .runbox .cmd{color:#f0d98a} .runbox .you{color:#e9c46a}
+
+  .do{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:1rem 1.1rem; margin:1.4rem 0}
+  .do b{color:var(--good)}
+  .do code{background:#dceadc}
+
+  /* quiz */
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q-block{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q-block .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q-block .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6;
+    border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  @media print{ body{background:#fff; padding:1rem} pre,.runbox{background:#f3efe6; color:#222} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0005 · Did it work?</p>
+  <h1>Measuring It</h1>
+  <p class="sub">Two scoreboards, wildly asymmetric. Classic search hands you a first-party API. AI citations hand you nothing — so you build the proxy everyone else builds.</p>
+
+  <p class="recap">Recap: you made a page eligible (<a href="0002-crawlable-vs-indexable.html">0002</a>), labelled its facts (<a href="0003-structured-data.html">0003</a>), and shaped its prose for retrieval (<a href="0004-writing-for-retrieval.html">0004</a>). All of that is a bet. This lesson closes the loop — how do you <em>know</em> it landed?</p>
+
+  <p class="lede">The two pipelines don't measure the same way, and the gap is the whole story. For classic search, Google gives you <b>ground truth</b> through an API. For AI-answer citations, <b>no engine exposes one</b> — so every tracker on the market, and the one you'll build, is a <em>proxy</em>.<sup>[1]</sup></p>
+
+  <div class="win">
+    <b>Your win:</b> run <code>citation_share.py</code> on a set of answer-engine responses and get your <em>coverage</em> (% of prompts that cite you) and <em>share of voice</em> (your slice of all citations) vs competitors — the same proxy metric Profound and Ahrefs Brand Radar sell.
+  </div>
+
+  <h2>Two scoreboards</h2>
+  <div class="twocol">
+    <div class="col seo">
+      <div class="h">Classic search — first-party API</div>
+      <div class="body">
+        <p><b>Google Search Console API.</b> Real impressions, clicks, average position, and the exact queries — from Google's own logs.<sup>[2]</sup></p>
+        <p>The <code>Web</code> search type now folds in traffic from AI features, so AI-Overview clicks already show up here.</p>
+        <span class="tag">✓ ground truth, queryable, free</span>
+      </div>
+    </div>
+    <div class="col aeo">
+      <div class="h">AI citations — no API exists</div>
+      <div class="body">
+        <p>No OpenAI / Anthropic / Perplexity / Google endpoint answers "how often is my site cited?" Google's June 2026 gen-AI reports are a Console <em>UI</em> view, not in the API yet.<sup>[3]</sup></p>
+        <p>So you sample: run a prompt library, parse the citations, tally.</p>
+        <span class="tag">✗ proxy only — synthetic, not real traffic</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Classic side: just call the API</h2>
+  <p>This one's a solved problem — authenticate, then <code>POST</code> a date range and the dimensions you want. No tool to build; the platform is the tool.</p>
+  <pre><span class="cm"># Search Console: top queries by clicks, last 28 days</span>
+POST https://www.googleapis.com/webmasters/v3/sites/<span class="s">{siteUrl}</span>/searchAnalytics/query
+{
+  <span class="k">"startDate"</span>: <span class="s">"2026-05-20"</span>, <span class="k">"endDate"</span>: <span class="s">"2026-06-17"</span>,
+  <span class="k">"dimensions"</span>: [<span class="s">"query"</span>],
+  <span class="k">"rowLimit"</span>: 100
+}
+<span class="cm"># -> rows of { keys:[query], clicks, impressions, ctr, position }</span></pre>
+  <p>Poll it on a schedule, store the rows, and you have rank/impression/click trends over time — the backbone of any SEO monitor.</p>
+
+  <h2>AEO side: the proxy you build</h2>
+  <p>Because there's no ground truth, every commercial AEO tracker does the same three steps — and so does <code>tools/citation_share.py</code>:</p>
+  <table>
+    <thead><tr><th>Step</th><th>What it is</th><th>Who owns it</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Prompt library</td><td>A fixed set of buyer questions in your space</td><td>you (the API key + prompts)</td></tr>
+      <tr><td>2 · Run the engine</td><td>Send each prompt, capture response + cited links</td><td>you (one API call)</td></tr>
+      <tr><td>3 · Parse &amp; score</td><td>Extract cited domains → coverage + share of voice</td><td><code>citation_share.py</code></td></tr>
+    </tbody>
+  </table>
+  <p>The tool is the offline, testable core. It scores <em>cited links</em> (the AEO equivalent of a rank), not bare brand mentions:</p>
+  <pre><span class="cm"># coverage = prompts that cite me; SOV = my citations / all citations</span>
+cited = cited_domains(entry)          <span class="cm"># links in response + citations[]</span>
+hit   = bool(cited &amp; my_domains)
+sov   = mine / total_citations</pre>
+
+  <div class="do">
+    <b>Do this now:</b>
+    <p style="margin:.5rem 0 0">1. Self-check (offline):<br><code>python3 tools/citation_share.py --demo</code></p>
+    <p style="margin:.4rem 0 0">2. Hand-make a tiny <code>results.json</code> — 3–4 buyer questions, paste in real answers + links from ChatGPT/Perplexity — then score it:<br><code>python3 tools/citation_share.py results.json --domain yourdomain.com</code></p>
+    <p style="margin:.4rem 0 0">3. <b>Re-run it next week.</b> The single number that matters is your <em>own coverage trend</em> — not the absolute value.</p>
+  </div>
+
+  <div class="runbox"><span class="cmd">$ python3 tools/citation_share.py results.json --domain myseo.io</span>
+
+  AI-citation share — 4 prompts, you = myseo.io
+  --------------------------------------------------------
+  COVERAGE    50%   cited in 2/4 prompts
+  SHARE OF VOICE    33%   of all citations are yours
+  --------------------------------------------------------
+  Top cited domains:
+      3  ahrefs.com
+      2  myseo.io <span class="you"><- you</span>
+      1  moz.com
+  --------------------------------------------------------
+  Per prompt:
+    <span class="hit">[HIT ]</span> best seo audit tool for developers?
+    <span class="miss">[miss]</span> how to track rankings via api?
+    <span class="hit">[HIT ]</span> what is generative engine optimization?
+    <span class="miss">[miss]</span> cheapest backlink checker?</div>
+
+  <div class="gotcha">
+    <b>Proxy ≠ ground truth — read your own numbers honestly.</b> Your prompt library is a sample <em>you</em> chose, not the engine's real query distribution, and answers are non-deterministic. So absolute share-of-voice means little, and two tools' numbers aren't comparable — they ran different prompts.<sup>[1]</sup> Treat it like a poll: a fixed prompt set re-run over time gives a trustworthy <em>trend</em>; a single run's headline % does not. Hold the prompts constant or you're measuring your prompts, not your site.
+  </div>
+
+  <p style="font-size:.88rem; color:var(--muted)">Ceiling to know: <code>citation_share.py</code> counts cited <em>links</em> only. "Brand mentioned without a link" is a different (softer) metric; domain matching is naive (no public-suffix list). Both are noted in the tool's docstring as upgrade paths.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · answer from memory</p>
+    <h2 style="margin-top:.4rem">Read the scoreboard</h2>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">Which has a first-party measurement API you can call today?</div>
+      <div class="opts">
+        <button class="opt">classic search (Google Search Console)</button>
+        <button class="opt">AI-answer citations</button>
+        <button class="opt">both, equally</button>
+        <button class="opt">neither</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="1">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">How does every AEO citation tracker get its numbers?</div>
+      <div class="opts">
+        <button class="opt">a first-party engine citation API</button>
+        <button class="opt">running a prompt library and parsing the responses</button>
+        <button class="opt">reading the site's robots.txt</button>
+        <button class="opt">the Search Console API</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">Why not compare your share-of-voice across two different AEO tools?</div>
+      <div class="opts">
+        <button class="opt">they ran different prompt sets — not comparable</button>
+        <button class="opt">one tool is always simply wrong</button>
+        <button class="opt">share of voice isn't a real metric</button>
+        <button class="opt">Google forbids the comparison</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">What does the Search Console API give you that an AEO proxy can't?</div>
+      <div class="opts">
+        <button class="opt">real impressions/clicks/position from Google's own logs</button>
+        <button class="opt">your exact ChatGPT citation count</button>
+        <button class="opt">a guaranteed #1 ranking</button>
+        <button class="opt">competitor API keys</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary source — read this next (≈12 min)</div>
+    <a href="https://developers.google.com/webmaster-tools/v1/searchanalytics/query">“Search Analytics: query” — Search Console API reference</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">The exact request body and the rows you get back — your classic-search ground-truth feed. Start at the <a href="https://developers.google.com/webmaster-tools/about">API overview</a>. For the AEO side, see the proxy-method walkthrough in <a href="https://ahrefs.com/blog/chatgpt-visibility-tracking/">Ahrefs' ChatGPT-visibility guide</a> and the gaps note in <a href="../RESOURCES.md"><code>RESOURCES.md</code></a>.</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> Ask your teacher: "wire citation_share to a real Perplexity/Claude call", "store runs in SQLite and chart the trend", "add brand-mention (no-link) scoring", "pull my real Search Console data via the API" — happy to build the next piece with you.
+  </div>
+
+  <nav class="links">
+    <a href="0004-writing-for-retrieval.html">← Lesson 0004</a>
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../RESOURCES.md">📚 Resources</a>
+    <span style="color:var(--muted)">Next: <em>0006 — the JS-rendering gap: what your crawler misses</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0005 · Measuring It · SEO/AEO for builders.<br>
+    [1] RESOURCES.md “Gaps” — no first-party AEO API; trackers use proxy sampling. &nbsp;
+    [2] Google, <a href="https://developers.google.com/webmaster-tools/v1/searchanalytics/query">Search Console API — Search Analytics query.</a> &nbsp;
+    [3] Google, <a href="https://developers.google.com/search/blog/2026/06/gen-ai-performance-reports">“Gen-AI performance reports in Search Console”</a> (UI report, not yet API).
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q-block').length;
+  const fbOk = [
+    "Right — Search Console is real first-party data you can query.",
+    "Correct — prompt library in, parse the cited domains out.",
+    "Yes — different prompt sets, so absolute numbers don't compare.",
+    "Correct — impressions/clicks/position from Google's own logs."];
+  const fbNo = [
+    "Classic search has Search Console; AI citations have no API yet.",
+    "There's no first-party citation API — trackers all sample via prompts.",
+    "Both can be 'right' on their own prompts; the prompt sets differ.",
+    "It's Google's logged search data — not AI citations or rankings."];
+  document.querySelectorAll('.q-block').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        document.getElementById('score').textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "you can read both scoreboards now. Next: the JS-rendering gap (0006)."
+           : "reread the two-scoreboards split, then build a tiny results.json and score it.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>
