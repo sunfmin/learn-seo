@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0003 · Structured Data</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .lede{font-size:1.12rem}
+  sup{font-size:.7em; color:var(--aeo)}
+  .recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo); padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  .twocol{display:flex; gap:1rem; flex-wrap:wrap; margin:1.4rem 0}
+  .col{flex:1 1 18rem; border:1px solid var(--rule); border-radius:.5rem; overflow:hidden}
+  .col .h{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; padding:.5rem .8rem; color:#fff}
+  .col.prose .h{background:#9a8f78}
+  .col.json .h{background:var(--aeo)}
+  .col .body{padding:.7rem .85rem; font-size:.86rem; line-height:1.45}
+  .col.json .body{background:#1e1c18; color:#e8e2d4; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.76rem; white-space:pre; overflow:auto}
+  .col .body .key{color:#9fd0e0} .col .body .str{color:#d8c89a}
+
+  .bridge{display:flex; gap:.8rem; flex-wrap:wrap; margin:1.4rem 0}
+  .b{flex:1 1 13rem; border:1px solid var(--rule); border-radius:.5rem; padding:.8rem 1rem; background:#fff}
+  .b.s{border-top:3px solid var(--seo)} .b.r{border-top:3px solid var(--aeo)}
+  .b .lab{font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600}
+  .b.s .lab{color:var(--seo)} .b.r .lab{color:var(--aeo)}
+  .b p{margin:.3rem 0 0; font-size:.9rem}
+
+  .rr{display:flex; gap:.6rem; margin:1rem 0}
+  .pill{font-size:.62rem; font-weight:600; letter-spacing:.08em; padding:.15rem .5rem; border-radius:1rem}
+  .pill.req{background:#f7e3df; color:var(--bad)} .pill.rec{background:#eef0e6; color:#6a6a3a}
+
+  pre{background:#1e1c18; color:#e8e2d4; padding:1rem 1.1rem; border-radius:.5rem; overflow:auto; font-size:.8rem; line-height:1.5}
+  pre .cm{color:#9a9486}
+  .runbox{background:#101418; color:#cfe8d4; padding:.9rem 1.1rem; border-radius:.5rem; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre; overflow:auto; margin:1rem 0}
+  .runbox .err{color:#f0978a} .runbox .warn{color:#e8cf8a} .runbox .cmd{color:#f0d98a}
+
+  .do{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:1rem 1.1rem; margin:1.4rem 0}
+  .do b{color:var(--good)} .do code{background:#dceadc}
+
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q-block{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q-block .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q-block .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6; border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block} .fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  @media print{ body{background:#fff; padding:1rem} pre,.runbox,.col.json .body{background:#f3efe6; color:#222} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0003 · Serve + Retrieve stages</p>
+  <h1>Structured Data</h1>
+  <p class="sub">Stop making machines parse your prose. Hand them the fact, already labelled.</p>
+
+  <p class="recap">From <a href="0002-crawlable-vs-indexable.html">Lesson 0002</a> your page is now crawlable and indexable. That gets it <em>into</em> the system. Structured data is the first lever that makes it stand out — and it's the first thing that serves <b>both</b> pipelines at once.</p>
+
+  <p class="lede">Structured data is machine-readable markup you embed in a page that says, explicitly, "this is a Product, its price is 29 USD, it's in stock." No NLP guesswork. Google recommends one format: <b>JSON-LD</b> — a <code>&lt;script&gt;</code> block of JSON, decoupled from your visible HTML.<sup>[1]</sup></p>
+
+  <div class="win">
+    <b>Your win:</b> generate valid JSON-LD for a page and lint it against Google's required-property rules — catching "this won't earn a rich result" <em>before</em> you ship, not weeks later in Search Console.
+  </div>
+
+  <h2>Prose vs. labelled fact</h2>
+  <div class="twocol">
+    <div class="col prose">
+      <div class="h">What a crawler sees in prose</div>
+      <div class="body">"Our Acme Widget Pro is available now for just twenty-nine dollars…"<br><br><em>An engine must <b>infer</b>: is that a product? a price? which currency? Is it in stock? Maybe right, maybe not.</em></div>
+    </div>
+    <div class="col json">
+      <div class="h">Same fact as JSON-LD</div>
+      <div class="body">{
+  <span class="key">"@type"</span>: <span class="str">"Product"</span>,
+  <span class="key">"name"</span>: <span class="str">"Acme Widget Pro"</span>,
+  <span class="key">"offers"</span>: {
+    <span class="key">"price"</span>: <span class="str">"29.00"</span>,
+    <span class="key">"priceCurrency"</span>: <span class="str">"USD"</span>,
+    <span class="key">"availability"</span>: <span class="str">"InStock"</span>
+  }
+}</div>
+    </div>
+  </div>
+
+  <h2>Why it serves both pipelines</h2>
+  <div class="bridge">
+    <div class="b s">
+      <div class="lab">Serve · classic search</div>
+      <p>Eligible for <b>rich results</b> — star ratings, prices, FAQ drop-downs right on the SERP. More space, more clicks.</p>
+    </div>
+    <div class="b r">
+      <div class="lab">Retrieve · answer engines</div>
+      <p>An LLM retrieving your page gets a <b>pre-extracted, unambiguous fact</b> to quote and cite — instead of risking a misread of your prose.<sup>[2]</sup></p>
+    </div>
+  </div>
+  <p style="font-size:.9rem;color:var(--muted)">Reality check: Google says structured data is <em>not</em> a magic AEO trick and there's no special "AI markup" — clean structured data simply makes your existing content easier for any machine to use.<sup>[3]</sup> That's the honest version, and it's enough.</p>
+
+  <h2>Required vs. recommended</h2>
+  <p>Every type has properties Google marks <span class="pill req">REQUIRED</span> (miss one → no rich result at all) and <span class="pill rec">RECOMMENDED</span> (skip → still valid, just less rich). Knowing which is which is the whole game — and exactly what a linter automates.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:.9rem;margin:.8rem 0">
+    <tr style="border-bottom:1px solid var(--rule)"><td style="padding:.4rem .5rem"><code>FAQPage</code></td><td style="padding:.4rem .5rem"><span class="pill req">REQ</span> <code>mainEntity</code> → each <code>Question</code> needs <code>name</code> + <code>acceptedAnswer.text</code></td></tr>
+    <tr style="border-bottom:1px solid var(--rule)"><td style="padding:.4rem .5rem"><code>Product</code></td><td style="padding:.4rem .5rem"><span class="pill req">REQ</span> <code>name</code>, and in <code>offers</code>: <code>price</code> + <code>priceCurrency</code></td></tr>
+    <tr><td style="padding:.4rem .5rem"><code>Article</code></td><td style="padding:.4rem .5rem"><span class="pill rec">REC</span> <code>headline</code>, <code>image</code>, <code>datePublished</code>, <code>author</code></td></tr>
+  </table>
+
+  <h2>The skill: generate &amp; lint with a script</h2>
+  <p>In this workspace: <code>tools/schema_tool.py</code> — stdlib only. It emits a copy-paste sample for a type and lints any JSON-LD file against the rules above.</p>
+
+  <div class="do">
+    <b>Do this now:</b>
+    <p style="margin:.5rem 0 0">1. Self-check: <code>python3 tools/schema_tool.py --demo</code></p>
+    <p style="margin:.4rem 0 0">2. Get markup you can paste into a page <code>&lt;head&gt;</code>:<br><code>python3 tools/schema_tool.py sample FAQPage</code></p>
+    <p style="margin:.4rem 0 0">3. Break it on purpose — save a Product JSON-LD with no <code>name</code>, then:<br><code>python3 tools/schema_tool.py lint bad.json</code> → watch it flag the <span style="color:var(--bad)">ERROR</span>.</p>
+  </div>
+
+  <div class="runbox"><span class="cmd">$ python3 tools/schema_tool.py lint bad.json</span>
+
+  Linting JSON-LD: @type = Product
+  --------------------------------------------------
+  <span class="err">[ERROR]</span> Product missing required property: name
+  <span class="warn">[WARN ]</span> Product missing recommended property: image
+  <span class="warn">[WARN ]</span> Product missing recommended property: offers
+  --------------------------------------------------
+  VERDICT: INVALID — 1 error(s) block the rich result.</div>
+
+  <p style="font-size:.88rem;color:var(--muted)">Ceiling: this linter encodes Google's rules for 3 types, not the full schema.org vocabulary. Before shipping production markup, confirm with Google's official <a href="https://search.google.com/test/rich-results">Rich Results Test</a> and the <a href="https://validator.schema.org/">schema.org validator</a>. Your script is the fast inner loop; theirs is the source of truth.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · answer from memory</p>
+    <h2 style="margin-top:.4rem">Check yourself</h2>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">Which structured-data format does Google recommend?</div>
+      <div class="opts">
+        <button class="opt">JSON-LD</button>
+        <button class="opt">CSV</button>
+        <button class="opt">YAML</button>
+        <button class="opt">TOML</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">Structured data most directly helps which two pipeline stages?</div>
+      <div class="opts">
+        <button class="opt">Serve and Retrieve stages</button>
+        <button class="opt">Crawl and Index stages</button>
+        <button class="opt">Rank and Crawl stages</button>
+        <button class="opt">Index and Serve stages</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">A <em>required</em> property is missing from your Product markup. Consequence?</div>
+      <div class="opts">
+        <button class="opt">the rich result is blocked</button>
+        <button class="opt">only a warning, still valid</button>
+        <button class="opt">the whole page goes noindex</button>
+        <button class="opt">the crawler skips this page</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">Why are <code>FAQPage</code> question/answer pairs strong for AEO?</div>
+      <div class="opts">
+        <button class="opt">each pair is an extractable answer</button>
+        <button class="opt">the pairs raise page rank directly</button>
+        <button class="opt">the pairs replace crawling entirely now</button>
+        <button class="opt">the pairs block competitor citations completely</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary source — read this next (≈12 min)</div>
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data">“Intro to structured data markup in Google Search” — Google Search Central</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">Formats, where to put it, and the per-type requirement lists your linter mirrors. Pair with <a href="https://schema.org/docs/gs.html">schema.org Getting Started</a>. Full list in <a href="../RESOURCES.md"><code>RESOURCES.md</code></a>.</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> Ask your teacher: "add an Organization type to the tool", "make schema_tool emit from a real URL", "how do I serve JSON-LD from a Go template?" — happy to extend the tool with you.
+  </div>
+
+  <nav class="links">
+    <a href="0002-crawlable-vs-indexable.html">← Lesson 0002</a>
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../RESOURCES.md">📚 Resources</a>
+    <span style="color:var(--muted)">Next: <em>0004 — writing for retrieval: the content shape AI engines actually cite</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0003 · Structured Data · SEO/AEO for builders.<br>
+    [1] Google, “Intro to structured data” (JSON-LD recommended). &nbsp;
+    [2] Aggarwal et al., <a href="https://arxiv.org/abs/2311.09735">GEO (arXiv:2311.09735)</a>. &nbsp;
+    [3] Google, <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">“Optimizing for generative AI features.”</a>
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q-block').length;
+  const fbOk = [
+    "Right — JSON-LD is Google's recommended format.",
+    "Yes — rich results (Serve) and clean extraction (Retrieve).",
+    "Correct — a missing required property blocks the rich result.",
+    "Correct — a Q&A pair is a ready-made answer to cite."];
+  const fbNo = [
+    "Google recommends JSON-LD; the others aren't used here.",
+    "It feeds Serve (rich results) and Retrieve (extraction).",
+    "Missing a required property blocks the rich result, nothing else.",
+    "Structured data doesn't directly move rank — it aids extraction."];
+  document.querySelectorAll('.q-block').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        document.getElementById('score').textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "labelled facts, locked in. Next: writing for retrieval (0004)."
+           : "reread the required-vs-recommended table, then run the linter to feel it.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>
