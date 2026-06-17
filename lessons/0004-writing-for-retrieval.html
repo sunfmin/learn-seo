@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0004 · Writing for Retrieval</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e; --term:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .lede{font-size:1.12rem}
+  sup{font-size:.7em; color:var(--aeo)}
+
+  .recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo);
+    padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  .gotcha{border-left:3px solid var(--bad); background:#f9ece9; padding:.8rem 1.1rem; border-radius:.4rem; margin:1.5rem 0}
+  .gotcha b{color:var(--bad)}
+
+  /* side-by-side: wall-of-prose vs retrievable chunk */
+  .twocol{display:flex; gap:1rem; flex-wrap:wrap; margin:1.4rem 0}
+  .col{flex:1 1 18rem; border:1px solid var(--rule); border-radius:.5rem; overflow:hidden; background:#fff}
+  .col .h{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; padding:.5rem .8rem; color:#fff}
+  .col.bad .h{background:#9a8f78}
+  .col.good .h{background:var(--aeo)}
+  .col .body{padding:.7rem .85rem; font-size:.88rem; line-height:1.5}
+  .col .body p{margin:.4rem 0}
+  .col .body .lift{display:block; margin-top:.5rem; font-size:.78rem; color:var(--muted); font-style:italic}
+
+  table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.9rem}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  td .lift{font-weight:600; color:var(--good)}
+
+  pre{background:#1e1c18; color:#e8e2d4; padding:1rem 1.1rem; border-radius:.5rem; overflow:auto; font-size:.82rem; line-height:1.5}
+  pre .cm{color:#9a9486}
+  .runbox{background:#101418; color:#cfe8d4; padding:.9rem 1.1rem; border-radius:.5rem; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre; overflow:auto; margin:1rem 0}
+  .runbox .pass{color:#7fd99a}
+  .runbox .warn{color:#e9c46a}
+  .runbox .cmd{color:#f0d98a}
+
+  .do{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:1rem 1.1rem; margin:1.4rem 0}
+  .do b{color:var(--good)}
+  .do code{background:#dceadc}
+
+  /* quiz */
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q-block{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q-block .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q-block .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6;
+    border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  @media print{ body{background:#fff; padding:1rem} pre,.runbox{background:#f3efe6; color:#222} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0004 · Retrieve + Generate stages</p>
+  <h1>Writing for Retrieval</h1>
+  <p class="sub">The unit an answer engine cites is a self-contained <em>passage</em>, not a page. So shape the passage — and there's a measured playbook for which edits actually work.</p>
+
+  <p class="recap">Recap: <a href="0002-crawlable-vs-indexable.html">0002</a> got the page through the crawl + index gates; <a href="0003-structured-data.html">0003</a> labelled its facts with JSON-LD. Both make a page <em>eligible</em>. Today is about the prose itself — making it the thing an AI answer engine lifts and credits.</p>
+
+  <p class="lede">An answer engine doesn't "read your page" and rank it. It chunks the web into passages, embeds them, <b>retrieves</b> the few most relevant, and <b>synthesizes</b> one answer — citing the passages it used.<sup>[1]</sup> So your real unit of optimization is the <b>passage</b>: a chunk that answers a question completely, on its own, in liftable form.</p>
+
+  <div class="win">
+    <b>Your win:</b> run <code>geo_lint.py</code> on any draft and get a 6-signal scorecard — statistics, sources, quotations, answer-first, chunking, no keyword-stuffing — each one an edit the research says moves citation visibility.
+  </div>
+
+  <h2>Same facts, two shapes</h2>
+  <p>The information is identical. Only the <em>shape</em> differs — and only one is easy to retrieve and quote in isolation.</p>
+  <div class="twocol">
+    <div class="col bad">
+      <div class="h">Wall of prose — hard to lift</div>
+      <div class="body">
+        <p>There are many things to consider with indexing and a lot of people get confused about it, and honestly crawling is also part of the picture, so when you think about whether your page shows up you have to think holistically about all of these interacting factors over time…</p>
+        <span class="lift">No standalone answer. An engine can't quote a sentence here without the whole rambling context.</span>
+      </div>
+    </div>
+    <div class="col good">
+      <div class="h">Answer-first chunk — liftable</div>
+      <div class="body">
+        <p><b>Is crawlable the same as indexable?</b> No — they're two separate gates. <em>Crawlable</em> means a bot may fetch the page; <em>indexable</em> means the engine keeps it.</p>
+        <p>Per Google, blocking a URL in <code>robots.txt</code> doesn't remove it from the index — the bot never reads the <code>noindex</code>.</p>
+        <span class="lift">A complete answer in two sentences, sourced. Cite-ready as-is.</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>What actually moves citation — the measured playbook</h2>
+  <p>The <a href="https://arxiv.org/abs/2311.09735">GEO paper</a> (Aggarwal et al., KDD 2024) A/B-tested content edits against generative engines on a benchmark of real queries. Three edits stood out, with up to ~<b>40%</b> relative visibility lift.<sup>[1]</sup> They're not stylistic — they make a passage more <em>quotable</em>.</p>
+  <table>
+    <thead><tr><th>Edit</th><th>Why it works</th><th>Measured</th></tr></thead>
+    <tbody>
+      <tr><td><b>Cite sources</b></td><td>A sourced claim is safer for the engine to repeat and attribute.</td><td><span class="lift">top tier</span></td></tr>
+      <tr><td><b>Add quotations</b></td><td>A verbatim quote from an authority is a ready-made liftable unit.</td><td><span class="lift">top tier</span></td></tr>
+      <tr><td><b>Add statistics</b></td><td>A concrete number is more citable than a vague adjective.</td><td><span class="lift">top tier</span></td></tr>
+      <tr><td>Keyword stuffing</td><td>The old SEO reflex. The study found it <b>didn't help</b> — and tended to hurt.</td><td>negative</td></tr>
+    </tbody>
+  </table>
+  <p>Layer extractability on top: <b>answer-first</b> (lead with the answer, then expand — the inverted pyramid), and <b>chunked</b> (headed, self-contained sections an engine can retrieve one at a time). The <code>FAQPage</code> markup from 0003 is this principle made structural — each Q&amp;A pair is a pre-chunked answer.</p>
+
+  <div class="gotcha">
+    <b>It's still SEO, not a magic file.</b> Google is on record: optimizing for AI features is the same work as good SEO — be crawlable, indexable, helpful, sourced. There is <u>no</u> special <code>llms.txt</code> or AI-only markup that buys you citations.<sup>[2]</sup> Retrieval shape is <em>additive</em> to lessons 0002–0003, not a replacement. A beautifully-shaped passage on a <code>noindex</code> page still gets cited zero times.
+  </div>
+
+  <h2>The skill: lint a draft before you publish</h2>
+  <p>You have <code>tools/geo_lint.py</code> in this workspace. Stdlib only. It scores text/markdown against the three GEO signals plus answer-first, chunking, and a stuffing check — turning "is this written for retrieval?" into a fast, repeatable loop you can drop into a publishing pipeline.</p>
+
+  <pre><span class="cm"># the three evidence-backed signals, as code</span>
+pcts  = re.findall(r"\d+%", text)              <span class="cm"># STATISTICS</span>
+links = re.findall(r"https?://\S+", text)      <span class="cm"># CITE SOURCES</span>
+quote = re.findall(r'"[^"]{15,}"', text)       <span class="cm"># QUOTATIONS</span>
+<span class="cm"># + answer-first (short lead block) + chunked (headings) + anti-stuffing</span></pre>
+
+  <div class="do">
+    <b>Do this now</b> — feel the contrast:
+    <p style="margin:.5rem 0 0">1. Self-check (offline):<br><code>python3 tools/geo_lint.py --demo</code></p>
+    <p style="margin:.4rem 0 0">2. Lint a real draft of yours:<br><code>python3 tools/geo_lint.py your-draft.md</code></p>
+    <p style="margin:.4rem 0 0">3. <b>Fix one WARN</b> — add a statistic with its source, or split a wall paragraph into a headed answer-first chunk — and re-run. Watch the score climb. That edit loop <em>is</em> the lesson.</p>
+  </div>
+
+  <div class="runbox"><span class="cmd">$ python3 tools/geo_lint.py weak-draft.md</span>
+
+  GEO / retrieval-readiness lint
+  --------------------------------------------------------
+  <span class="warn">[WARN]</span> STATISTICS    few/no numbers — add concrete stats
+  <span class="warn">[WARN]</span> CITE SOURCES  thin sourcing — back claims with references
+  <span class="warn">[WARN]</span> QUOTATIONS    no quotations — a verbatim quote is highly liftable
+  <span class="pass">[PASS]</span> ANSWER-FIRST  opens with a 36-word answer block
+  <span class="warn">[WARN]</span> CHUNKED       0 headings — break into self-contained chunks
+  <span class="warn">[WARN]</span> NO STUFFING   'seo' is 42% of content words (10x) — reads as stuffing
+  --------------------------------------------------------
+  SCORE: 1/6 signals — weak — restructure before publishing.</div>
+
+  <p style="font-size:.88rem; color:var(--muted)">Ceiling to know: these are <em>presence</em> heuristics, not a quality judge — a linter can confirm you cited a source, not that the source is good or the claim true. It scores shape; you still own the substance. And a high score helps citation odds, it doesn't guarantee them.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · answer from memory</p>
+    <h2 style="margin-top:.4rem">Shape for the engine</h2>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">What is the unit an answer engine actually retrieves and cites?</div>
+      <div class="opts">
+        <button class="opt">a self-contained passage</button>
+        <button class="opt">your entire domain</button>
+        <button class="opt">the &lt;title&gt; tag only</button>
+        <button class="opt">the XML sitemap</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="2">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">In the GEO study, which edits raised generative-engine visibility most?</div>
+      <div class="opts">
+        <button class="opt">repeating the target keyword more</button>
+        <button class="opt">hiding extra text with CSS</button>
+        <button class="opt">adding statistics, quotations, and citations</button>
+        <button class="opt">buying more backlinks</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">What did keyword stuffing do in that study?</div>
+      <div class="opts">
+        <button class="opt">it didn't help — and tended to hurt</button>
+        <button class="opt">it was the top-performing edit</button>
+        <button class="opt">it's mandatory for AI Mode</button>
+        <button class="opt">it replaces JSON-LD</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="1">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">Why lead a section with a short, direct answer (inverted pyramid)?</div>
+      <div class="opts">
+        <button class="opt">it raises your domain authority</button>
+        <button class="opt">it gives the engine a quotable, self-contained chunk</button>
+        <button class="opt">it bypasses the crawl gate</button>
+        <button class="opt">it forces Google to show a rich result</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary source — read this next (≈15 min)</div>
+    <a href="https://arxiv.org/abs/2311.09735">“GEO: Generative Engine Optimization” — Aggarwal et al. (arXiv:2311.09735, KDD 2024)</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">Read the abstract + the methods table — it's where the three signals and the ~40% number come from, and the neutral baseline beneath the vendor noise. Pair with Google's <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">“Optimizing for generative AI features”</a> (the “it's still SEO” doc). Full list in <a href="../RESOURCES.md"><code>RESOURCES.md</code></a>.</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> Ask your teacher: "make geo_lint read a URL not a file", "wire it into a pre-publish git hook", "add a readability/fluency check from the GEO paper", "score one of my real posts together" — happy to extend the tool with you.
+  </div>
+
+  <nav class="links">
+    <a href="0003-structured-data.html">← Lesson 0003</a>
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../RESOURCES.md">📚 Resources</a>
+    <span style="color:var(--muted)">Next: <em>0005 — measuring it: Search Console API + tracking AI-citation share</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0004 · Writing for Retrieval · SEO/AEO for builders.<br>
+    [1] Aggarwal et al., <a href="https://arxiv.org/abs/2311.09735">“GEO: Generative Engine Optimization” (arXiv:2311.09735)</a> — cite-sources / quotations / statistics measured as top edits. &nbsp;
+    [2] Google Search Central, <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">“Optimizing for generative AI features”</a> (AEO is still SEO; no special markup). &nbsp;
+    [3] Google, <a href="https://developers.google.com/search/docs/appearance/ai-features">“AI features and your website.”</a>
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q-block').length;
+  const fbOk = [
+    "Right — the passage is the retrieval unit, so shape the passage.",
+    "Correct — sources, quotes, and stats were the measured top edits.",
+    "Yes — the study found stuffing unhelpful, often harmful.",
+    "Correct — a short lead answer is a quotable, self-contained chunk."];
+  const fbNo = [
+    "Engines chunk the web — they retrieve and cite a passage, not a domain.",
+    "Stuffing/hiding/backlinks weren't the lift; sources, quotes, stats were.",
+    "Stuffing didn't help (and hurt) — it's the anti-pattern, not the win.",
+    "It's about extractability — a standalone, quotable chunk, not authority."];
+  document.querySelectorAll('.q-block').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        document.getElementById('score').textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "shape locked in. Next: measuring it (0005)."
+           : "reread the measured-playbook table, then lint a real draft to feel it.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>
