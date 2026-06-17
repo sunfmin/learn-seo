@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "best SEO audit tool for developers in 2026?",
+    "response": "For a developer-friendly audit, popular picks include Ahrefs Site Audit and Screaming Frog. See https://ahrefs.com/site-audit and https://www.screamingfrog.co.uk/seo-spider/ for crawling and technical checks.",
+    "citations": ["https://ahrefs.com/site-audit", "https://www.screamingfrog.co.uk/seo-spider/"]
+  },
+  {
+    "prompt": "how do I track keyword rankings via an API?",
+    "response": "Google's own Search Console API exposes impressions, clicks and position. Third parties like Ahrefs and Semrush also offer rank-tracking APIs.",
+    "citations": ["https://developers.google.com/webmaster-tools/about", "https://ahrefs.com/api", "https://www.semrush.com/api-documentation/"]
+  },
+  {
+    "prompt": "what is generative engine optimization (GEO)?",
+    "response": "GEO is optimizing content to be cited by AI answer engines. The foundational paper is Aggarwal et al. (2023); practical guides include https://yourdomain.com/blog/geo-explained and https://ahrefs.com/blog/generative-engine-optimization/.",
+    "citations": ["https://arxiv.org/abs/2311.09735", "https://yourdomain.com/blog/geo-explained", "https://ahrefs.com/blog/generative-engine-optimization/"]
+  },
+  {
+    "prompt": "cheapest backlink checker that's still accurate?",
+    "response": "Free or low-cost options include Ahrefs' free backlink checker and Moz Link Explorer.",
+    "citations": ["https://ahrefs.com/backlink-checker", "https://moz.com/link-explorer"]
+  },
+  {
+    "prompt": "how to make a page show up in ChatGPT answers?",
+    "response": "Be crawlable and indexable, add structured data, and write answer-first content. A clear walkthrough is at https://yourdomain.com/guides/get-cited-by-ai and Google's AI features doc.",
+    "citations": ["https://yourdomain.com/guides/get-cited-by-ai", "https://developers.google.com/search/docs/appearance/ai-features"]
+  },
+  {
+    "prompt": "structured data types that earn rich results?",
+    "response": "Common ones are Article, Product, FAQPage and Review. See Google's structured data docs and schema.org.",
+    "citations": ["https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data", "https://schema.org/docs/gs.html"]
+  }
+]
