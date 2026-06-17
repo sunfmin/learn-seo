@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossary — SEO / AEO for Builders</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --accent:#7a4b1e; --accent2:#1e5a7a; --code:#f3efe6;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.5; margin:0; padding:4rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:46rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .4rem}
+  h1{font-size:2rem; font-weight:600; margin:0 0 .3rem; letter-spacing:-.01em}
+  .sub{color:var(--muted); font-style:italic; margin:0 0 2.2rem}
+  dl{margin:0}
+  dt{font-weight:600; font-size:1.05rem; margin-top:1.6rem; color:var(--ink)}
+  dt .tag{font-size:.62rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+    vertical-align:middle; margin-left:.5rem; padding:.12rem .4rem; border-radius:.3rem;}
+  .tag.seo{background:#f0e6d8; color:var(--accent)}
+  .tag.aeo{background:#dceaf2; color:var(--accent2)}
+  .tag.both{background:#e7e7df; color:#555}
+  dd{margin:.25rem 0 0; color:#333}
+  dd code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.85em}
+  .grp{margin-top:2.6rem; padding-top:.4rem; border-top:2px solid var(--rule)}
+  .grp h2{font-size:.8rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  footer{margin-top:3.5rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.85rem; color:var(--muted)}
+  a{color:var(--accent2)}
+  @media print{ body{background:#fff; padding:1.2rem} .kicker{color:#000} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Reference · adhere to these definitions in every lesson</p>
+  <h1>Glossary</h1>
+  <p class="sub">Shared vocabulary for SEO, AEO, and the automation built on top of them. Tags: <span class="tag seo">SEO</span> classic search · <span class="tag aeo">AEO</span> AI answer engines · <span class="tag both">BOTH</span></p>
+
+  <div class="grp">
+    <h2>The fields</h2>
+    <dl>
+      <dt>SEO — Search Engine Optimization <span class="tag seo">SEO</span></dt>
+      <dd>Making a site rank higher in classic search results pages (the "ten blue links"). Optimizes for the <em>crawl → index → rank → serve</em> pipeline.</dd>
+
+      <dt>AEO — Answer Engine Optimization <span class="tag aeo">AEO</span></dt>
+      <dd>Making your content the source an AI answer engine <em>cites</em> when it generates a reply (ChatGPT, Claude, Perplexity, Google AI Overviews). Sometimes called GEO.</dd>
+
+      <dt>GEO — Generative Engine Optimization <span class="tag aeo">AEO</span></dt>
+      <dd>Academic name for AEO, from the GEO research paper. Same goal: visibility inside generated answers, not just ranked links.</dd>
+    </dl>
+  </div>
+
+  <div class="grp">
+    <h2>The classic pipeline</h2>
+    <dl>
+      <dt>Crawling <span class="tag seo">SEO</span></dt>
+      <dd>A bot (e.g. Googlebot) fetches your pages by following links and reading your <code>sitemap.xml</code>. Gated by <code>robots.txt</code>.</dd>
+
+      <dt>Indexing <span class="tag seo">SEO</span></dt>
+      <dd>The engine parses a crawled page, renders it, and stores it in a giant searchable database. A page that isn't indexed can never rank.</dd>
+
+      <dt>Ranking <span class="tag seo">SEO</span></dt>
+      <dd>For a given query, the engine orders indexed pages by hundreds of signals (relevance, links, quality, freshness). Decides position.</dd>
+
+      <dt>Serving / SERP <span class="tag seo">SEO</span></dt>
+      <dd>The Search Engine Results Page actually shown to the user — links, plus features like snippets, knowledge panels, and AI Overviews.</dd>
+    </dl>
+  </div>
+
+  <div class="grp">
+    <h2>The answer-engine pipeline</h2>
+    <dl>
+      <dt>Retrieval <span class="tag aeo">AEO</span></dt>
+      <dd>The answer engine pulls candidate passages — usually from the <em>same crawled/indexed web</em> (often via a live search) — to ground its answer. This is why indexing still matters for AEO.</dd>
+
+      <dt>Synthesis / Generation <span class="tag aeo">AEO</span></dt>
+      <dd>The LLM writes a single composed answer from the retrieved passages plus its training knowledge.</dd>
+
+      <dt>Citation <span class="tag aeo">AEO</span></dt>
+      <dd>The link/attribution the engine shows next to (or behind) its answer. Being the cited source is the AEO win — the equivalent of a #1 rank.</dd>
+    </dl>
+  </div>
+
+  <div class="grp">
+    <h2>Builder-facing artifacts</h2>
+    <dl>
+      <dt>Structured data <span class="tag both">BOTH</span></dt>
+      <dd>Machine-readable markup (usually <code>schema.org</code> JSON-LD) embedded in a page that tells engines exactly what an entity is. Powers rich results and helps machines extract facts.</dd>
+
+      <dt><code>robots.txt</code> <span class="tag both">BOTH</span></dt>
+      <dd>A file at your site root that tells crawlers which paths they may or may not fetch. First thing a crawler reads.</dd>
+
+      <dt><code>sitemap.xml</code> <span class="tag both">BOTH</span></dt>
+      <dd>A machine-readable list of your URLs (with metadata) that helps crawlers discover pages efficiently.</dd>
+    </dl>
+  </div>
+
+  <footer>
+    Part of the SEO/AEO learning workspace · see <a href="../lessons/0001-the-two-pipelines.html">Lesson 0001</a> · grounded in <a href="../MISSION.md">the mission</a>.<br>
+    Ask your teacher (this agent) to clarify or expand any term.
+  </footer>
+</div>
+</body>
+</html>

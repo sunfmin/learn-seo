@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0001 · The Two Pipelines</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em}
+  .lede{font-size:1.12rem}
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo);
+    padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  /* pipeline diagram */
+  .pipes{margin:1.8rem 0 1rem}
+  .pipe{margin:1.1rem 0}
+  .pipe .label{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; font-weight:600; margin-bottom:.5rem}
+  .pipe.seo .label{color:var(--seo)}
+  .pipe.aeo .label{color:var(--aeo)}
+  .flow{display:flex; flex-wrap:wrap; align-items:stretch; gap:.35rem}
+  .stage{flex:1 1 0; min-width:6.6rem; border-radius:.45rem; padding:.6rem .55rem; text-align:center;
+    border:1px solid var(--rule); position:relative}
+  .pipe.seo .stage{background:var(--seobg)}
+  .pipe.aeo .stage{background:var(--aeobg)}
+  .stage .s-name{font-weight:600; font-size:.95rem; display:block}
+  .stage .s-do{font-size:.74rem; color:#555; display:block; margin-top:.15rem; line-height:1.3}
+  .arrow{align-self:center; color:var(--muted); font-size:1.1rem; flex:0 0 auto}
+  .feeds{text-align:center; color:var(--muted); font-size:.82rem; font-style:italic; margin:.6rem 0 0}
+  .feeds b{font-style:normal; color:var(--aeo)}
+
+  /* builder mapping table */
+  table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.92rem}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  td code{font-size:.82em}
+
+  .insight{border-left:3px solid var(--aeo); background:var(--aeobg); padding:.7rem 1rem; border-radius:.4rem; margin:1.4rem 0}
+  .insight b{color:var(--aeo)}
+
+  /* quiz */
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6;
+    border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--good)}
+  .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  sup{font-size:.7em; color:var(--aeo)}
+  @media print{ body{background:#fff; padding:1rem} .opt{cursor:default} .quiz{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0001 · Foundations</p>
+  <h1>The Two Pipelines</h1>
+  <p class="sub">Before any tactic makes sense, you need the machine it feeds. There are two of them.</p>
+
+  <p class="lede">You're a developer building marketing automation. So skip the tips-and-tricks framing. The only durable model is this: <b>your content flows through a pipeline of distinct stages, and every SEO/AEO tactic is just an intervention at one stage.</b> Master the stages and every tactic finds its slot.</p>
+
+  <div class="win">
+    <b>Your win for this lesson:</b> given any SEO or AEO tactic, you can name which pipeline and which stage it targets — and therefore what your tooling must produce for it.
+  </div>
+
+  <h2>Pipeline 1 — Classic search</h2>
+  <p>This is what "SEO" has always meant. Google (or Bing) runs four stages, in order. A page that fails an early stage never reaches the later ones — you cannot rank a page that was never indexed, and you cannot index a page that was never crawled.<sup>[1]</sup></p>
+
+  <div class="pipes">
+    <div class="pipe seo">
+      <div class="label">Classic search · SEO</div>
+      <div class="flow">
+        <div class="stage"><span class="s-name">Crawl</span><span class="s-do">bot fetches your pages</span></div>
+        <span class="arrow">→</span>
+        <div class="stage"><span class="s-name">Index</span><span class="s-do">parse + store in the database</span></div>
+        <span class="arrow">→</span>
+        <div class="stage"><span class="s-name">Rank</span><span class="s-do">order pages for a query</span></div>
+        <span class="arrow">→</span>
+        <div class="stage"><span class="s-name">Serve</span><span class="s-do">render the results page</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Pipeline 2 — AI answer engines</h2>
+  <p>This is "AEO" (a.k.a. GEO). ChatGPT, Claude, Perplexity, and Google's AI Overviews don't hand you ten links — they compose one answer and <em>cite</em> a few sources. The stages are different: <b>retrieve</b> candidate passages, <b>synthesize</b> an answer, <b>cite</b> the sources used.<sup>[2]</sup></p>
+
+  <div class="pipes">
+    <div class="pipe aeo">
+      <div class="label">AI answer engine · AEO / GEO</div>
+      <div class="flow">
+        <div class="stage"><span class="s-name">Retrieve</span><span class="s-do">pull passages, often via live search</span></div>
+        <span class="arrow">→</span>
+        <div class="stage"><span class="s-name">Synthesize</span><span class="s-do">LLM writes one answer</span></div>
+        <span class="arrow">→</span>
+        <div class="stage"><span class="s-name">Cite</span><span class="s-do">attribute the sources used</span></div>
+      </div>
+      <p class="feeds">▲ Retrieval usually reads from the <b>same crawled & indexed web</b> as Pipeline 1.</p>
+    </div>
+  </div>
+
+  <div class="insight">
+    <b>The key connection:</b> AEO does not replace SEO — it sits on top of it. Most answer engines retrieve from the indexed web (frequently by running a search query under the hood). So being crawlable and indexable is <em>table stakes for both</em>. AEO then adds a new question: once retrieved, is your page easy to extract a clean, quotable, citable fact from?
+  </div>
+
+  <h2>Why a builder cares: each stage is a thing your software touches</h2>
+  <p>The reason this model is worth memorizing: every stage maps to a concrete artifact your automation will read or write.</p>
+
+  <table>
+    <thead><tr><th>Stage</th><th>What your tooling does here</th></tr></thead>
+    <tbody>
+      <tr><td><b>Crawl</b></td><td>Generate/validate <code>robots.txt</code> &amp; <code>sitemap.xml</code>; check pages return 200 and aren't blocked.</td></tr>
+      <tr><td><b>Index</b></td><td>Render pages headless; verify titles, canonicals, and that content is in the HTML, not hidden behind JS.</td></tr>
+      <tr><td><b>Rank</b></td><td>Audit content depth, internal links, page speed; track keyword positions via an API.</td></tr>
+      <tr><td><b>Serve</b></td><td>Emit <code>schema.org</code> structured data so you win rich results &amp; snippets.</td></tr>
+      <tr><td><b>Retrieve</b></td><td>Make facts extractable: clear headings, self-contained sentences, structured data.</td></tr>
+      <tr><td><b>Cite</b></td><td>Track which AI engines cite you, for which prompts, over time.</td></tr>
+    </tbody>
+  </table>
+  <p>Future lessons drill into one cell at a time. Today you only need the map.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · no peeking</p>
+    <h2 style="margin-top:.4rem">Place the tactic on the pipeline</h2>
+    <p style="font-size:.93rem; color:var(--muted); margin-top:0">Answer from memory — that effort is what makes it stick. One try each; pick before you read the others.</p>
+
+    <div class="q" data-correct="2">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">In classic search, which stage decides the <em>order</em> results appear in?</div>
+      <div class="opts">
+        <button class="opt">Crawl</button>
+        <button class="opt">Index</button>
+        <button class="opt">Rank</button>
+        <button class="opt">Serve</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" data-correct="0">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">An AI answer engine mostly draws its answer from…</div>
+      <div class="opts">
+        <button class="opt">already crawled and indexed pages</button>
+        <button class="opt">a separate private fact database</button>
+        <button class="opt">the model's frozen training weights</button>
+        <button class="opt">paid placements from advertising partners</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" data-correct="0">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">For AEO, why does getting <em>indexed</em> still matter?</div>
+      <div class="opts">
+        <button class="opt">engines retrieve from the indexed web</button>
+        <button class="opt">indexing directly edits the model weights</button>
+        <button class="opt">classic ranking is now fully obsolete</button>
+        <button class="opt">crawlers skip pages lacking structured data</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" data-correct="0">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">Your tool validates <code>robots.txt</code> and <code>sitemap.xml</code>. Which stage is it serving?</div>
+      <div class="opts">
+        <button class="opt">Crawl</button>
+        <button class="opt">Index</button>
+        <button class="opt">Rank</button>
+        <button class="opt">Cite</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary source — read this next (≈15 min)</div>
+    <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">“In-depth guide to how Google Search works” — Google Search Central</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">The crawl → index → serve pipeline straight from the engine's own docs. The highest-trust source there is for Pipeline 1. (More resources land in <code>RESOURCES.md</code> as your teacher curates them.)</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> This agent is your teacher. Ask it anything — "show me a real robots.txt", "do Claude and Perplexity retrieve differently?", "what's an example of a non-indexable page?" Followups are the fastest way to learn.
+  </div>
+
+  <nav class="links">
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../MISSION.md">🎯 Mission</a>
+    <span style="color:var(--muted)">Next: <em>Lesson 0002 — Make a page crawlable &amp; indexable (with a script)</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0001 · Foundations · SEO/AEO for builders.<br>
+    [1] Google Search Central, “How Search Works.” &nbsp; [2] Aggarwal et al., “GEO: Generative Engine Optimization,” <a href="https://arxiv.org/abs/2311.09735">arXiv:2311.09735</a> (KDD 2024); and Google Search Central, <a href="https://developers.google.com/search/docs/appearance/ai-features">“AI features and your website.”</a>
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q').length;
+  const fbOk = ["Right. Ranking is the ordering step.",
+               "Yes — engines ground answers in the live indexed web.",
+               "Correct — retrieval reads the index, so indexing is table stakes.",
+               "Correct — robots.txt & sitemaps are crawl-stage controls."];
+  const fbNo = ["Ranking orders the indexed pages for a query.",
+               "Engines retrieve from the crawled & indexed web (often via a live search).",
+               "Retrieval reads the indexed web — no index, no retrieval.",
+               "Those files tell the crawler what to fetch — the Crawl stage."];
+  document.querySelectorAll('.q').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        const s = document.getElementById('score');
+        s.textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "you own the map. On to Lesson 0002."
+           : "review the diagram above, then ask your teacher about any miss.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>
