@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0008 · E-E-A-T</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e; --term:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .lede{font-size:1.12rem}
+  sup{font-size:.7em; color:var(--aeo)}
+  blockquote{margin:1.2rem 0; padding:.4rem 0 .4rem 1.1rem; border-left:3px solid var(--seo); color:#444; font-style:italic}
+
+  .recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo);
+    padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  .gotcha{border-left:3px solid var(--bad); background:#f9ece9; padding:.8rem 1.1rem; border-radius:.4rem; margin:1.5rem 0}
+  .gotcha b{color:var(--bad)}
+
+  /* the four letters */
+  .letters{display:flex; gap:.6rem; flex-wrap:wrap; margin:1.4rem 0}
+  .letter{flex:1 1 9rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff; padding:.7rem .85rem}
+  .letter .L{font-size:1.5rem; font-weight:700; color:var(--seo); line-height:1}
+  .letter .t{font-weight:600; margin:.2rem 0 .15rem; font-size:.95rem}
+  .letter .d{font-size:.82rem; color:#555; line-height:1.45}
+  .letter.trust{border-color:#bfa06a; background:#fbf3e6}
+  .letter.trust .L{color:#b07a1e}
+
+  table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.9rem}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  td .pill{font-size:.66rem; font-weight:700; letter-spacing:.08em; padding:.1rem .35rem; border-radius:.3rem; background:var(--seobg); color:var(--seo)}
+
+  pre{background:#1e1c18; color:#e8e2d4; padding:1rem 1.1rem; border-radius:.5rem; overflow:auto; font-size:.82rem; line-height:1.5}
+  pre .cm{color:#9a9486} pre .k{color:#9fd0e0} pre .s{color:#d8c89a} pre .t{color:#d99a7f}
+  .runbox{background:#101418; color:#cfe8d4; padding:.9rem 1.1rem; border-radius:.5rem; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre; overflow:auto; margin:1rem 0}
+  .runbox .hit{color:#7fd99a} .runbox .miss{color:#e9886a} .runbox .cmd{color:#f0d98a} .runbox .you{color:#e9c46a} .runbox .dim{color:#9a9486}
+
+  .do{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:1rem 1.1rem; margin:1.4rem 0}
+  .do b{color:var(--good)}
+  .do code{background:#dceadc}
+
+  /* quiz */
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q-block{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q-block .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q-block .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6;
+    border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  @media print{ body{background:#fff; padding:1rem} pre,.runbox{background:#f3efe6; color:#222} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0008 · The quality signals behind every ranking</p>
+  <h1>E-E-A-T</h1>
+  <p class="sub">Google's name for “is this content trustworthy?” It’s not a score, not a tag, not a ranking factor — and that’s exactly why a builder can win here: turn the fuzzy guideline into signals a machine can check.</p>
+
+  <p class="recap">Recap: <a href="0007-sitemaps-and-indexnow.html">0007</a> got your page <em>found</em>. But found ≠ believed. Every prior lesson made the page eligible and discoverable; this one is about whether engines (and AI answer engines) have any reason to <em>trust</em> what it says.</p>
+
+  <p class="lede">E-E-A-T = <b>Experience, Expertise, Authoritativeness, Trust</b> — the framework Google’s quality raters use to judge content. Google is blunt about its centre: <em>“Of these aspects, trust is most important. The others contribute to trust.”</em><sup>[1]</sup> And about the trap most people fall into next.</p>
+
+  <h2>The myth, and the builder’s opening</h2>
+  <p>There is no “E-E-A-T score,” no E-E-A-T meta tag, and it is <b>not a direct ranking factor</b>. Straight from Google:</p>
+  <blockquote>“While E-E-A-T itself isn’t a specific ranking factor, using a mix of factors that can identify content with good E-E-A-T is useful.”<sup>[1]</sup></blockquote>
+  <p>Read that as a spec. Google’s systems approximate E-E-A-T with a <em>mix of factors</em> — and many of those factors are concrete, machine-readable things on your page. You can’t compute the score, but you <b>can</b> audit the mix. That’s the tool.</p>
+
+  <div class="win">
+    <b>Your win:</b> run <code>eeat_audit.py</code> on a page and get a checklist of the detectable trust signals — byline, author’s linked identity, publish/updated dates, publisher, outbound sourcing, transparency links — grouped by the E-E-A-T letter each supports. Explicitly <em>not</em> a score; a gap-finder.
+  </div>
+
+  <h2>Four letters, one centre</h2>
+  <div class="letters">
+    <div class="letter"><div class="L">E</div><div class="t">Experience</div><div class="d">First-hand: did the author actually use/visit/do the thing?</div></div>
+    <div class="letter"><div class="L">E</div><div class="t">Expertise</div><div class="d">Skill/knowledge of the author on the topic.</div></div>
+    <div class="letter"><div class="L">A</div><div class="t">Authoritativeness</div><div class="d">Is the author/site a known go-to source? (Largely off-page.)</div></div>
+    <div class="letter trust"><div class="L">T</div><div class="t">Trust ★</div><div class="d">Accurate, honest, safe. The centre — the others feed it.<sup>[1]</sup></div></div>
+  </div>
+  <p>The higher the stakes, the higher the bar: Google holds <b>YMYL</b> pages — “Your Money or Your Life,” anything affecting health, finances, safety, or societal well-being — to far stricter E-E-A-T.<sup>[2]</sup></p>
+
+  <h2>From fuzzy guideline → detectable signal</h2>
+  <p>This is the whole builder move: each abstract quality maps to something in your HTML or JSON-LD that a crawler can confirm in milliseconds.</p>
+  <table>
+    <thead><tr><th>Quality</th><th>Machine-detectable proxy</th><th>Lives in</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill">E·E</span> authorship</td><td>named author + author entity</td><td><code>meta[author]</code>, <code>rel=author</code>, Article <code>author</code></td></tr>
+      <tr><td><span class="pill">A</span> authority</td><td>author identity linked off-site</td><td><code>Person.sameAs</code> → real profile</td></tr>
+      <tr><td><span class="pill">A</span> publisher</td><td>org behind the content</td><td>Article <code>publisher</code></td></tr>
+      <tr><td><span class="pill">T</span> transparency</td><td>publish + updated dates</td><td><code>datePublished</code>, <code>dateModified</code></td></tr>
+      <tr><td><span class="pill">T</span> accountability</td><td>about / contact reachable</td><td>site nav / footer links</td></tr>
+      <tr><td><span class="pill">T</span> sourcing</td><td>cites outside references</td><td>outbound <code>&lt;a&gt;</code> to sources</td></tr>
+    </tbody>
+  </table>
+  <p>That last row is also an <span style="color:var(--aeo)">AEO</span> lever: the GEO research found that adding citations, quotations, and statistics measurably lifts how often AI engines cite a page.<sup>[3]</sup> Trust signals and AI-citation signals are the same signals.</p>
+
+  <h2>The tool: audit the mix</h2>
+  <pre><span class="cm"># NOT a score. Each row is one factor in Google's "mix" — present or missing.</span>
+author_named  = meta[author] <span class="k">or</span> rel=author <span class="k">or</span> Article.author
+author_linked = Person.sameAs -&gt; an authoritative profile     <span class="cm"># authority</span>
+trust = datePublished &amp; dateModified &amp; publisher
+      &amp; cites_outbound_sources &amp; about/contact &amp; https      <span class="cm"># the centre</span></pre>
+
+  <div class="do">
+    <b>Do this now:</b>
+    <p style="margin:.5rem 0 0">1. Self-check (offline): <code>python3 tools/eeat_audit.py --demo</code></p>
+    <p style="margin:.4rem 0 0">2. Audit a real article (yours or a competitor’s):<br><code>python3 tools/eeat_audit.py https://site.com/blog/post</code></p>
+    <p style="margin:.4rem 0 0">3. Fix one <span style="color:var(--bad)">MISS</span> with the highest leverage — usually <code>author</code> + <code>sameAs</code> + <code>dateModified</code> in your Article JSON-LD (you already have the schema tool from <a href="0003-structured-data.html">0003</a>).</p>
+  </div>
+
+  <div class="runbox"><span class="cmd">$ python3 tools/eeat_audit.py https://thin-blog.example/post</span>
+
+  E-E-A-T proxy-signal audit
+  <span class="dim">NOTE: not an 'E-E-A-T score' (no such thing) — these are the
+        machine-detectable factors that align with E-E-A-T.</span>
+  <span class="dim">--------------------------------------------------------</span>
+  [E·E] Experience / Expertise
+      <span class="miss">[MISS]</span> named author (byline / meta / schema)
+      <span class="miss">[MISS]</span> author detailed in Article schema
+  [A] Authoritativeness
+      <span class="miss">[MISS]</span> author identity linked off-site (sameAs)
+      <span class="miss">[MISS]</span> publisher declared in schema
+  [T] Trust (most important)
+      <span class="miss">[MISS]</span> served over HTTPS
+      <span class="miss">[MISS]</span> publish date present (datePublished)
+      <span class="hit">[ok ]</span> cites outbound sources  (2 external link(s))
+      <span class="miss">[MISS]</span> transparency link (about / contact)
+  <span class="dim">--------------------------------------------------------</span>
+  <span class="miss">1/9 trust signals present.</span> Anonymous / thin — engines have little to trust.</div>
+
+  <div class="gotcha">
+    <b>You can’t mark your way to authority.</b> These signals are <em>necessary, not sufficient</em>. A <code>sameAs</code> pointing at a profile that doesn’t establish any real expertise fools no one — Authoritativeness is mostly earned <em>off</em> your page (who links to and cites the author), which is <a href="#" onclick="return false" style="color:var(--muted);cursor:default">next lesson’s</a> topic. The audit finds the <em>missing</em> markup so engines can <em>read</em> the trust you’ve actually built; it can’t manufacture trust you haven’t. And on YMYL topics, faking it is actively risky.<sup>[2]</sup> Add the signals because they’re true, then make them machine-readable.
+  </div>
+
+  <p style="font-size:.88rem; color:var(--muted)">Ceiling to know: <code>eeat_audit.py</code> checks <em>presence</em> of signals, not their quality — it confirms an author is named, not that the author is genuinely expert. It’s a completeness gate on the parts a machine can verify, deliberately silent on the parts only a human rater can judge.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · answer from memory</p>
+    <h2 style="margin-top:.4rem">Earn the trust</h2>
+
+    <div class="q-block" data-correct="1">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">What does Google say about E-E-A-T as a ranking factor?</div>
+      <div class="opts">
+        <button class="opt">it’s the #1 direct ranking factor</button>
+        <button class="opt">it isn’t a specific ranking factor; systems use a mix of factors that identify good E-E-A-T</button>
+        <button class="opt">it’s a meta tag you add to the &lt;head&gt;</button>
+        <button class="opt">it only exists for YMYL pages</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="3">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">Which letter does Google call the most important?</div>
+      <div class="opts">
+        <button class="opt">Experience</button>
+        <button class="opt">Expertise</button>
+        <button class="opt">Authoritativeness</button>
+        <button class="opt">Trust</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="2">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">How should a builder operationalize E-E-A-T?</div>
+      <div class="opts">
+        <button class="opt">compute a 0–100 E-E-A-T score from the page text</button>
+        <button class="opt">add an <code>&lt;meta name="eeat"&gt;</code> tag</button>
+        <button class="opt">audit the machine-detectable proxy signals (author, dates, publisher, sourcing)</button>
+        <button class="opt">buy backlinks until it ranks</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">Best machine-readable way to assert the author’s authority?</div>
+      <div class="opts">
+        <button class="opt">a Person schema with <code>sameAs</code> linking to an authoritative profile</button>
+        <button class="opt">repeat the author’s name in keywords</button>
+        <button class="opt">use the (nonexistent) E-E-A-T JSON-LD type</button>
+        <button class="opt">hide the author to protect privacy</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary sources — read these next (≈15 min)</div>
+    <a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content">“Creating Helpful, Reliable, People-First Content” — Google Search Central</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">Google’s own E-E-A-T explainer: the definition, “trust is most important,” and the “not a specific ranking factor / mix of factors” line. Go deeper with the <a href="https://services.google.com/fh/files/misc/hsw-sqrg.pdf">Search Quality Rater Guidelines (PDF)</a> for E-E-A-T + YMYL, and the GEO sourcing finding in <a href="https://arxiv.org/abs/2311.09735">arXiv:2311.09735</a>.</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> Ask your teacher: “generate the Person + Article JSON-LD with author/sameAs/dates for my page”, “add an author-bio / credentials check”, “flag YMYL pages and raise the bar”, “score outbound sources by domain authority”, “diff my E-E-A-T signals vs a top-ranking competitor” — happy to build the next piece with you.
+  </div>
+
+  <nav class="links">
+    <a href="0007-sitemaps-and-indexnow.html">← Lesson 0007</a>
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../RESOURCES.md">📚 Resources</a>
+    <span style="color:var(--muted)">Next: <em>0009 — links: the off-page authority signal</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0008 · E-E-A-T · SEO/AEO for builders.<br>
+    [1] Google, <a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content">“Creating Helpful, Reliable, People-First Content”</a> — E-E-A-T definition; “trust is most important”; “While E-E-A-T itself isn’t a specific ranking factor, using a mix of factors that can identify content with good E-E-A-T is useful.” &nbsp;
+    [2] Google, <a href="https://services.google.com/fh/files/misc/hsw-sqrg.pdf">Search Quality Rater Guidelines (PDF)</a> — E-E-A-T + YMYL; a rater framework, not an algorithm score. &nbsp;
+    [3] Aggarwal et al., <a href="https://arxiv.org/abs/2311.09735">GEO (arXiv:2311.09735)</a> — citing sources / quotations / statistics lifts AI-answer visibility.
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q-block').length;
+  const fbOk = [
+    "Right — not a specific ranking factor; Google approximates it with a mix of factors.",
+    "Correct — trust is the centre; the other three feed it.",
+    "Yes — you can't compute the score, but you can audit the detectable mix.",
+    "Correct — Person.sameAs to a real, authoritative profile is the machine-readable way."];
+  const fbNo = [
+    "Google says E-E-A-T isn't a specific ranking factor — it uses a mix of factors that identify it.",
+    "Google calls Trust the most important; the others contribute to it.",
+    "There's no score and no meta tag — audit the proxy signals a machine can read.",
+    "Authority is asserted via Person.sameAs to a real profile (and earned off-page), not keywords."];
+  document.querySelectorAll('.q-block').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        document.getElementById('score').textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "you can make trust machine-readable now. Next: off-page authority / links (0009)."
+           : "reread 'The myth, and the builder's opening', then audit a real article.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>
