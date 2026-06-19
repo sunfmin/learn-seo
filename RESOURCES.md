@@ -23,7 +23,9 @@ All URLs verified resolving as of 2026-06-17. Knowledge for lessons is drawn fro
 - [Search Quality Rater Guidelines (PDF) — Google](https://services.google.com/fh/files/misc/hsw-sqrg.pdf)
   Google's full evaluator manual defining E-E-A-T and "quality." Use to understand *what Google considers good content* at the policy level.
 - [IndexNow — getting started (Bing)](https://www.bing.com/indexnow/getstarted) · [protocol docs](https://www.indexnow.org/documentation)
-  Open protocol for instantly pushing URL changes to Bing/Yandex/others. Use when building a crawl-notification step into a publishing pipeline.
+  Open protocol for instantly pushing URL changes to Bing/Yandex/Naver/Seznam. POST `{host, key, keyLocation, urlList}` (≤10,000 URLs/post); the ping is shared across all participants. **Google does NOT participate** (verified June 2026) — it sticks to sitemaps + its own crawl scheduling, with the Indexing API limited to JobPosting/livestream. Use when building a crawl-notification step into a publishing pipeline.
+- [The Sitemap protocol — sitemaps.org](https://www.sitemaps.org/protocol.html) · [Build and submit a sitemap — Google](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)
+  The authoritative sitemap spec: ≤50,000 URLs and ≤50 MB per file, `<loc>` required, `<lastmod>` optional (W3C date), all URLs single-host; past 50k use a sitemap index. Google's doc covers formats + submission. Use for: Lesson 0007 (sitemaps + IndexNow), generating/validating sitemaps in a publish pipeline.
 
 ### Recognized authorities (evidence-based)
 

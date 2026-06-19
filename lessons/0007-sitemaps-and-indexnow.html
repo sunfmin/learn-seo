@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0007 · Sitemaps + IndexNow</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e; --term:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .lede{font-size:1.12rem}
+  sup{font-size:.7em; color:var(--aeo)}
+
+  .recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo);
+    padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  .gotcha{border-left:3px solid var(--bad); background:#f9ece9; padding:.8rem 1.1rem; border-radius:.4rem; margin:1.5rem 0}
+  .gotcha b{color:var(--bad)}
+
+  /* side-by-side: passive sitemap vs active IndexNow */
+  .twocol{display:flex; gap:1rem; flex-wrap:wrap; margin:1.4rem 0}
+  .col{flex:1 1 18rem; border:1px solid var(--rule); border-radius:.5rem; overflow:hidden; background:#fff}
+  .col .h{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; padding:.5rem .8rem; color:#fff}
+  .col.seo .h{background:var(--seo)}
+  .col.aeo .h{background:var(--aeo)}
+  .col .body{padding:.7rem .85rem; font-size:.88rem; line-height:1.5}
+  .col .body p{margin:.4rem 0}
+  .col .body .tag{display:block; margin-top:.5rem; font-size:.78rem; font-style:italic}
+  .col.seo .tag{color:var(--good)} .col.aeo .tag{color:var(--aeo)}
+
+  table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.9rem}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  td.y{color:var(--good); font-weight:600} td.n{color:var(--bad); font-weight:600}
+
+  pre{background:#1e1c18; color:#e8e2d4; padding:1rem 1.1rem; border-radius:.5rem; overflow:auto; font-size:.82rem; line-height:1.5}
+  pre .cm{color:#9a9486} pre .k{color:#9fd0e0} pre .s{color:#d8c89a} pre .t{color:#d99a7f}
+  .runbox{background:#101418; color:#cfe8d4; padding:.9rem 1.1rem; border-radius:.5rem; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre; overflow:auto; margin:1rem 0}
+  .runbox .hit{color:#7fd99a} .runbox .miss{color:#e9886a} .runbox .cmd{color:#f0d98a} .runbox .you{color:#e9c46a} .runbox .dim{color:#9a9486}
+
+  .do{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:1rem 1.1rem; margin:1.4rem 0}
+  .do b{color:var(--good)}
+  .do code{background:#dceadc}
+
+  /* quiz */
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q-block{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q-block .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q-block .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6;
+    border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  @media print{ body{background:#fff; padding:1rem} pre,.runbox{background:#f3efe6; color:#222} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0007 · Telling engines you changed</p>
+  <h1>Sitemaps + IndexNow</h1>
+  <p class="sub">Publishing a page is half the job. The other half is the ping: one mechanism every engine pulls on its own slow schedule, one that pushes instantly — to everyone except Google.</p>
+
+  <p class="recap">Recap: <a href="0006-the-js-rendering-gap.html">0006</a> made sure your content is actually <em>in</em> the HTML the server sends. Now the page exists and renders. But an engine still has to <em>find out</em> it exists, or changed. That discovery step is its own pipeline stage — and it’s the most automatable one in the whole course.</p>
+
+  <p class="lede">Two notification mechanisms, and the asymmetry is the lesson. A <b>sitemap</b> is <em>passive</em>: a list of your URLs the engine pulls when it feels like it — slow, but universal, Google included. <b>IndexNow</b> is <em>active</em>: you POST changed URLs and participating engines fetch within minutes, then share the ping with each other.<sup>[2]</sup> The catch: <b>Google doesn’t participate in IndexNow</b> — it relies on its own crawl scheduling plus your sitemap.<sup>[3]</sup> So a real publishing pipeline fires both.</p>
+
+  <div class="win">
+    <b>Your win:</b> <code>sitemap_ping.py</code> <em>generates</em> a spec-valid <code>sitemap.xml</code> from a URL list, <em>validates</em> an existing one against the real sitemaps.org limits, and <em>builds</em> a correct IndexNow payload (key + keyLocation + urlList) — the exact two calls a publish hook should make.
+  </div>
+
+  <h2>Who listens to what</h2>
+  <table>
+    <thead><tr><th>Mechanism</th><th>Google</th><th>Bing / Yandex / Naver / Seznam</th><th>Speed</th></tr></thead>
+    <tbody>
+      <tr><td><b>sitemap.xml</b> (passive pull)</td><td class="y">yes</td><td class="y">yes</td><td>slow — on the engine’s schedule</td></tr>
+      <tr><td><b>IndexNow</b> (active push)</td><td class="n">no — ignores it<sup>[3]</sup></td><td class="y">yes — shared across all<sup>[2]</sup></td><td>minutes</td></tr>
+    </tbody>
+  </table>
+  <p>Why a builder cares about the engines Google snubs: several of them feed <em>AI</em> answers (Bing’s index sits behind Copilot and others), so an instant IndexNow push is partly an <span style="color:var(--aeo)">AEO</span> discovery move, not just classic SEO.</p>
+
+  <div class="twocol">
+    <div class="col seo">
+      <div class="h">sitemap.xml — the passive list</div>
+      <div class="body">
+        <p>One file, ≤ <b>50,000 URLs</b> and ≤ <b>50 MB</b> uncompressed. Required tag: <code>&lt;loc&gt;</code>. Optional <code>&lt;lastmod&gt;</code> (W3C date).<sup>[1]</sup></p>
+        <p>All URLs must be on <b>one host</b>. Submit once via Search Console or <code>robots.txt</code>; re-fetched on Google’s schedule.</p>
+        <span class="tag">✓ universal · ✗ slow, no “it changed!” signal</span>
+      </div>
+    </div>
+    <div class="col aeo">
+      <div class="h">IndexNow — the active push</div>
+      <div class="body">
+        <p>POST <code>{host, key, keyLocation, urlList}</code> to the endpoint, ≤ <b>10,000 URLs</b> per call.<sup>[2]</sup></p>
+        <p>Key = 8–128 chars <code>[a-zA-Z0-9-]</code>, hosted in a text file at your root so the engine can verify you own the site.</p>
+        <span class="tag">✓ instant + shared · ✗ Google not included</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>The tool: build, validate, push</h2>
+  <p>Both halves are pure data transforms — perfect for a publish hook, and offline-testable. The IndexNow side validates everything <em>before</em> it would ever hit the network:</p>
+  <pre><span class="cm"># IndexNow payload is built + checked offline; --send is the only network call</span>
+key matches  <span class="s">^[A-Za-z0-9-]{8,128}$</span>     <span class="cm"># or it's rejected</span>
+all URLs share one host          <span class="cm"># keyLocation must be on it too</span>
+&lt;= 10,000 URLs per post
+<span class="cm"># sitemap side: well-formed, &lt;=50k URLs, &lt;=50MB, one host, valid lastmod</span></pre>
+
+  <div class="do">
+    <b>Do this now:</b>
+    <p style="margin:.5rem 0 0">1. Self-check (offline): <code>python3 tools/sitemap_ping.py --demo</code></p>
+    <p style="margin:.4rem 0 0">2. Make a <code>urls.txt</code> (one URL per line, optional <code>&lt;tab&gt;lastmod</code>), generate + validate:<br><code>python3 tools/sitemap_ping.py gen urls.txt &gt; sitemap.xml</code><br><code>python3 tools/sitemap_ping.py check sitemap.xml</code></p>
+    <p style="margin:.4rem 0 0">3. Build an IndexNow push (dry run — prints the key-file step + the exact POST body):<br><code>python3 tools/sitemap_ping.py indexnow https://yoursite.com/new-page --key &lt;your-key&gt;</code></p>
+  </div>
+
+  <div class="runbox"><span class="cmd">$ python3 tools/sitemap_ping.py check sitemap.xml</span>
+
+  Sitemap check
+  <span class="dim">----------------------------------------------------</span>
+  <span class="hit">[PASS]</span> well-formed XML
+  <span class="hit">[PASS]</span> root is &lt;urlset&gt;
+  <span class="hit">[PASS]</span> every &lt;url&gt; has a &lt;loc&gt;  (412 urls)
+  <span class="hit">[PASS]</span> &lt;= 50,000 URLs  (412)
+  <span class="hit">[PASS]</span> &lt;= 50 MB uncompressed
+  <span class="miss">[FAIL]</span> all URLs share one host  (site.com, cdn.site.com)
+  <span class="miss">[FAIL]</span> lastmod dates valid (W3C)  (2 bad: ['19/06/2026'])
+  <span class="dim">----------------------------------------------------</span>
+  <span class="miss">VERDICT: 2 problem(s) — engines may reject it.</span></div>
+
+  <div class="gotcha">
+    <b>Three pipeline traps.</b> (1) <b>IndexNow ≠ Google.</b> Pinging IndexNow and watching nothing happen in Google is expected — Google never took it.<sup>[3]</sup> Google’s only push API is the <em>Indexing API</em>, limited to <code>JobPosting</code> and livestream pages; for everything else it’s sitemap + crawl schedule, with a manual “Request indexing” in Search Console. (2) <b>The key file must actually be reachable</b> at <code>keyLocation</code> and contain the key, or every push is rejected — same trust model as <code>robots.txt</code>. (3) <b>A sitemap is discovery, not a ranking lever.</b> Listing a URL gets it <em>found</em>; it does nothing for whether it ranks or gets cited. Don’t expect traffic from a sitemap alone.
+  </div>
+
+  <p style="font-size:.88rem; color:var(--muted)">Ceiling to know: <code>sitemap_ping.py</code> writes a single sitemap; past 50k URLs you need a <em>sitemap index</em> (a sitemap of sitemaps) — noted in the tool as the next upgrade. It defaults IndexNow to a dry run; <code>--send</code> is the one line that touches the network.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · answer from memory</p>
+    <h2 style="margin-top:.4rem">Ping check</h2>
+
+    <div class="q-block" data-correct="2">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">Which engine ignores IndexNow and relies on sitemaps + its own crawl schedule?</div>
+      <div class="opts">
+        <button class="opt">Bing</button>
+        <button class="opt">Yandex</button>
+        <button class="opt">Google</button>
+        <button class="opt">all of them support it equally</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="1">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">What’s the core difference between a sitemap and IndexNow?</div>
+      <div class="opts">
+        <button class="opt">sitemaps are XML, IndexNow is YAML</button>
+        <button class="opt">sitemap = passive list engines pull; IndexNow = active push you send</button>
+        <button class="opt">IndexNow improves rankings; sitemaps don’t</button>
+        <button class="opt">they’re two names for the same thing</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">Why must the IndexNow key live in a file at your site root?</div>
+      <div class="opts">
+        <button class="opt">so the engine can verify you own the host before trusting the push</button>
+        <button class="opt">to compress the urlList</button>
+        <button class="opt">because Google requires it</button>
+        <button class="opt">to set the lastmod date</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="3">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">Your single sitemap just passed 50,000 URLs. What does the spec require next?</div>
+      <div class="opts">
+        <button class="opt">switch to IndexNow instead</button>
+        <button class="opt">delete the oldest URLs</button>
+        <button class="opt">nothing — 50k is only a suggestion</button>
+        <button class="opt">split it and add a sitemap index (a sitemap of sitemaps)</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary sources — read these next (≈12 min)</div>
+    <a href="https://www.sitemaps.org/protocol.html">The Sitemap protocol — sitemaps.org</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">The authoritative spec: tags, the 50,000-URL / 50 MB limits, W3C date format, single-host rule. Pair with Google’s <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap">“Build and submit a sitemap”</a> for submission, and the <a href="https://www.indexnow.org/documentation">IndexNow protocol docs</a> (key + payload). Google’s non-participation is tracked in <a href="../RESOURCES.md"><code>RESOURCES.md</code></a>.</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> Ask your teacher: “add sitemap-index output for &gt;50k URLs”, “wire <code>--send</code> into a git post-publish hook”, “generate the key file + verify it’s reachable”, “add &lt;lastmod&gt; straight from git commit dates”, “compare IndexNow vs Google’s Indexing API for my content type” — happy to build the next piece with you.
+  </div>
+
+  <nav class="links">
+    <a href="0006-the-js-rendering-gap.html">← Lesson 0006</a>
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../RESOURCES.md">📚 Resources</a>
+    <span style="color:var(--muted)">Next: <em>0008 — E-E-A-T: the quality signals behind every ranking</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0007 · Sitemaps + IndexNow · SEO/AEO for builders.<br>
+    [1] sitemaps.org, <a href="https://www.sitemaps.org/protocol.html">“The Sitemap protocol”</a> — 50,000 URLs / 50 MB per file, <code>&lt;loc&gt;</code> required, W3C dates, single host. &nbsp;
+    [2] IndexNow, <a href="https://www.indexnow.org/documentation">protocol docs</a> — POST <code>{host,key,keyLocation,urlList}</code>, ≤10,000 URLs/post, “submitted URLs will be automatically shared with all other participating search engines.” &nbsp;
+    [3] Google does not participate in IndexNow (verified June 2026); it uses sitemaps + its own crawl scheduling, with the Indexing API limited to JobPosting/livestream. See RESOURCES.md.
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q-block').length;
+  const fbOk = [
+    "Right — Google never adopted IndexNow; it uses sitemaps + its own schedule.",
+    "Correct — passive pull vs active push is the whole distinction.",
+    "Yes — the key file proves host ownership, same trust model as robots.txt.",
+    "Correct — split into multiple sitemaps and reference them from a sitemap index."];
+  const fbNo = [
+    "Bing, Yandex, Naver and Seznam take IndexNow — Google is the one that doesn't.",
+    "Format isn't the point: sitemap = passive list pulled; IndexNow = active push sent.",
+    "It's host verification — the engine fetches the key file to confirm you own the site.",
+    "Past 50,000 URLs the spec requires splitting + a sitemap index."];
+  document.querySelectorAll('.q-block').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        document.getElementById('score').textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "you can wire a publish-and-notify hook now. Next: E-E-A-T (0008)."
+           : "reread 'Who listens to what', then generate + validate a sitemap.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>

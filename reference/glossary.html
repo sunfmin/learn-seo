@@ -115,7 +115,10 @@
       <dd>A file at your site root that tells crawlers which paths they may or may not fetch. First thing a crawler reads.</dd>
 
       <dt><code>sitemap.xml</code> <span class="tag both">BOTH</span></dt>
-      <dd>A machine-readable list of your URLs (with metadata) that helps crawlers discover pages efficiently.</dd>
+      <dd>A machine-readable list of your URLs (with metadata) that helps crawlers discover pages efficiently. <em>Passive</em>: engines pull it on their own schedule. Spec limits: ≤50,000 URLs and ≤50 MB per file; <code>&lt;loc&gt;</code> required, <code>&lt;lastmod&gt;</code> optional (W3C date); all URLs on one host. Past 50k URLs, use a <b>sitemap index</b> (a sitemap of sitemaps).</dd>
+
+      <dt>IndexNow <span class="tag both">BOTH</span></dt>
+      <dd>An open protocol to <em>actively push</em> changed URLs to engines: <code>POST {host, key, keyLocation, urlList}</code> (≤10,000 URLs/post), and the ping is shared across all participants. Supported by Bing, Yandex, Naver, Seznam — <b>not Google</b>, which sticks to sitemaps + its own crawl scheduling. The key (8–128 chars) lives in a file at your root to prove host ownership.</dd>
 
       <dt><code>noindex</code> <span class="tag seo">SEO</span></dt>
       <dd>A directive telling the engine to drop a page from the index. Lives in <code>&lt;meta name="robots"&gt;</code> or the <code>X-Robots-Tag</code> header. Only works if the page is <em>crawlable</em> — a blocked page's noindex is never read.</dd>
