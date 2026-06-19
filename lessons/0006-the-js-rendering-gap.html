@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0006 · The JS-Rendering Gap</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e3ddd0; --bg:#fdfcf8;
+    --seo:#7a4b1e; --seobg:#f0e6d8; --aeo:#1e5a7a; --aeobg:#dceaf2;
+    --code:#f3efe6; --good:#2e6b3e; --bad:#a23a2e; --term:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.58; margin:0; padding:3.5rem 1.5rem 6rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem; margin:0 auto}
+  .kicker{font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:0 0 .5rem}
+  h1{font-size:2.1rem; font-weight:600; margin:0 0 .35rem; letter-spacing:-.015em; line-height:1.1}
+  .sub{color:var(--muted); font-style:italic; font-size:1.05rem; margin:0 0 2rem}
+  h2{font-size:1.3rem; font-weight:600; margin:2.6rem 0 .6rem; letter-spacing:-.01em}
+  p{margin:.7rem 0}
+  a{color:var(--aeo)}
+  code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .lede{font-size:1.12rem}
+  sup{font-size:.7em; color:var(--aeo)}
+
+  .recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+
+  .win{background:#fbf6ea; border:1px solid var(--rule); border-left:3px solid var(--seo);
+    padding:.9rem 1.1rem; border-radius:.4rem; margin:1.4rem 0; font-size:.97rem}
+  .win b{color:var(--seo)}
+
+  .gotcha{border-left:3px solid var(--bad); background:#f9ece9; padding:.8rem 1.1rem; border-radius:.4rem; margin:1.5rem 0}
+  .gotcha b{color:var(--bad)}
+
+  /* the deferred render pipeline */
+  .pipe{display:flex; align-items:stretch; gap:.5rem; flex-wrap:wrap; margin:1.4rem 0}
+  .pipe .step{flex:1 1 8rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff; padding:.7rem .8rem}
+  .pipe .step .n{font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .pipe .step .t{font-weight:600; margin:.15rem 0 .25rem}
+  .pipe .step .d{font-size:.82rem; color:#555; line-height:1.45}
+  .pipe .step.defer{border-color:#d9b48a; background:#fbf3e6}
+  .pipe .arrow{align-self:center; color:var(--muted); font-size:1.1rem}
+
+  /* side-by-side: server-rendered vs client-rendered */
+  .twocol{display:flex; gap:1rem; flex-wrap:wrap; margin:1.4rem 0}
+  .col{flex:1 1 18rem; border:1px solid var(--rule); border-radius:.5rem; overflow:hidden; background:#fff}
+  .col .h{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; font-weight:600; padding:.5rem .8rem; color:#fff}
+  .col.seo .h{background:var(--good)}
+  .col.aeo .h{background:var(--bad)}
+  .col .body{padding:.7rem .85rem; font-size:.88rem; line-height:1.5}
+  .col .body p{margin:.4rem 0}
+  .col .body .tag{display:block; margin-top:.5rem; font-size:.78rem; font-style:italic}
+  .col.seo .tag{color:var(--good)} .col.aeo .tag{color:var(--bad)}
+
+  table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.9rem}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+  pre{background:#1e1c18; color:#e8e2d4; padding:1rem 1.1rem; border-radius:.5rem; overflow:auto; font-size:.82rem; line-height:1.5}
+  pre .cm{color:#9a9486} pre .k{color:#9fd0e0} pre .s{color:#d8c89a} pre .t{color:#d99a7f}
+  .runbox{background:#101418; color:#cfe8d4; padding:.9rem 1.1rem; border-radius:.5rem; font-family:"SF Mono",ui-monospace,Menlo,monospace; font-size:.8rem; white-space:pre; overflow:auto; margin:1rem 0}
+  .runbox .hit{color:#7fd99a} .runbox .miss{color:#e9886a} .runbox .cmd{color:#f0d98a} .runbox .you{color:#e9c46a} .runbox .dim{color:#9a9486}
+
+  .do{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:1rem 1.1rem; margin:1.4rem 0}
+  .do b{color:var(--good)}
+  .do code{background:#dceadc}
+
+  /* quiz */
+  .quiz{margin:2.2rem 0 0; border-top:2px solid var(--rule); padding-top:1.4rem}
+  .q-block{margin:1.6rem 0; padding:1rem 1.1rem; border:1px solid var(--rule); border-radius:.5rem; background:#fff}
+  .q-block .qnum{font-size:.68rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q-block .qtext{font-weight:600; margin:.3rem 0 .8rem; font-size:1.02rem}
+  .opts{display:flex; flex-direction:column; gap:.45rem}
+  .opt{display:block; text-align:left; font:inherit; font-size:.96rem; background:#fbfaf6;
+    border:1px solid var(--rule); border-radius:.4rem; padding:.55rem .7rem; cursor:pointer; transition:.12s}
+  .opt:hover{border-color:#c9bfa8; background:#f6f2e8}
+  .opt.correct{background:#e8f3ea; border-color:var(--good); color:var(--good); font-weight:600}
+  .opt.wrong{background:#f7e9e7; border-color:var(--bad); color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .fb{margin-top:.6rem; font-size:.9rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+  .score{margin-top:1.4rem; font-size:1.05rem; font-weight:600; min-height:1.5rem}
+
+  .primary{margin:2.4rem 0 0; background:#fbf6ea; border:1px solid var(--rule); border-radius:.5rem; padding:1rem 1.2rem}
+  .primary .ttl{font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--seo); font-weight:600; margin-bottom:.3rem}
+  .ask{background:#eef4ee; border:1px solid #cfe0cf; border-radius:.5rem; padding:.8rem 1rem; margin-top:1.6rem; font-size:.92rem}
+  .ask b{color:var(--good)}
+  nav.links{margin-top:2.4rem; font-size:.92rem}
+  nav.links a{margin-right:1.2rem; white-space:nowrap}
+  footer{margin-top:2.6rem; padding-top:1rem; border-top:1px solid var(--rule); font-size:.88rem; color:var(--muted)}
+  @media print{ body{background:#fff; padding:1rem} pre,.runbox{background:#f3efe6; color:#222} .opt{cursor:default} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Lesson 0006 · What your crawler misses</p>
+  <h1>The JS-Rendering Gap</h1>
+  <p class="sub">Your page has two versions: the HTML the server sends, and the DOM after JavaScript runs. Half the bots only ever see the first one — and they decide whether you exist.</p>
+
+  <p class="recap">Recap: in <a href="0002-crawlable-vs-indexable.html">0002</a> you ran <code>crawl_audit.py</code> and it said “crawlable + indexable.” But that tool fetches with <code>urllib</code> — it reads the <em>raw</em> response and never runs a line of JS. So does the page it blessed actually <em>contain</em> anything? This lesson finds the gap.</p>
+
+  <p class="lede">Google doesn’t index your page in one shot. It crawls the <b>raw HTML</b> first, then — separately, later, when its resources allow — a headless Chrome <b>renders</b> the page, runs the JavaScript, and re-indexes whatever the JS produced.<sup>[1]</sup> Rendering is a <em>deferred queue</em>, not part of the crawl. If your content only exists after JS, it’s invisible until that second wave — and to many bots, invisible forever.</p>
+
+  <div class="win">
+    <b>Your win:</b> run <code>render_gap.py</code> on a page’s <em>raw</em> HTML vs its <em>rendered</em> DOM and get a per-signal diff — words, links, JSON-LD, headings — flagging exactly which ones exist <b>only after JavaScript</b>. That’s the content a no-JS bot never sees and Google sees late.
+  </div>
+
+  <h2>Two waves, not one</h2>
+  <p>Straight from Google’s JavaScript-SEO doc: pages are processed in phases, and rendering sits in its own queue.<sup>[1]</sup></p>
+  <div class="pipe">
+    <div class="step"><div class="n">Wave 1</div><div class="t">Crawl</div><div class="d">Googlebot fetches the <b>raw HTML</b>. Indexes what’s in it. No JS yet.</div></div>
+    <div class="arrow">→</div>
+    <div class="step defer"><div class="n">Queue · deferred</div><div class="t">Render</div><div class="d">“Once Google’s resources allow, a headless Chrome renders the page and executes the JavaScript.”<sup>[1]</sup> Can take seconds — or much longer.</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="n">Wave 2</div><div class="t">Re-index</div><div class="d">Now the JS-produced content, links and schema get indexed — if rendering succeeded.</div></div>
+  </div>
+  <p>Google <em>does</em> run your JavaScript “using a recent version of Chrome, similar to how your browser renders pages.”<sup>[2]</sup> The catch is <em>when</em>, and <em>who else doesn’t</em>.</p>
+
+  <h2>Your audit tool is a no-JS bot — and so are most AI crawlers</h2>
+  <p><code>crawl_audit.py</code> from 0002 is exactly the kind of fetcher that sees wave-1 only:</p>
+  <pre><span class="cm"># crawl_audit.py — the fetch is plain HTTP. No browser, no JS.</span>
+req = urllib.request.<span class="t">Request</span>(url, headers={<span class="s">"User-Agent"</span>: <span class="s">"Googlebot"</span>})
+body = urllib.request.<span class="t">urlopen</span>(req).read()   <span class="cm"># &lt;- raw HTML only</span></pre>
+  <p>So if your <code>&lt;title&gt;</code>, content, and canonical are injected by React after load, <code>crawl_audit.py</code> can’t see them — and it might still print PASS off a near-empty shell. The same blind spot hits the AEO side hard: standalone AI crawlers commonly fetch raw HTML and <b>don’t execute JavaScript</b>, and there’s no settled standard for controlling them.<sup>[3]</sup> Client-side content that Googlebot eventually renders may never reach an answer engine at all.</p>
+
+  <div class="twocol">
+    <div class="col seo">
+      <div class="h">Server-rendered (SSR / SSG) — content in the first byte</div>
+      <div class="body">
+        <p>The HTML response already holds the text, links, and JSON-LD. JS only enhances.</p>
+        <p>Seen by wave-1 Googlebot, no-JS AI crawlers, your own audit — <em>everyone</em>, immediately.</p>
+        <span class="tag">✓ indexed now · citable now</span>
+      </div>
+    </div>
+    <div class="col aeo">
+      <div class="h">Client-rendered (CSR) — empty shell + bundle</div>
+      <div class="body">
+        <p>Raw HTML is <code>&lt;div id="root"&gt;&lt;/div&gt;</code>. All content arrives via JS.</p>
+        <p>Invisible to no-JS bots; Googlebot indexes it only on the deferred render wave — if it renders cleanly.</p>
+        <span class="tag">✗ delayed for Google · missing for AEO</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>The tool: diff the two versions</h2>
+  <p>You give <code>render_gap.py</code> two things — the <em>raw</em> HTML (it can fetch this, like 0002’s tool) and the <em>rendered</em> DOM (you capture it: DevTools → Elements → right-click <code>&lt;html&gt;</code> → <em>Copy outerHTML</em>). It extracts the same signals from each and flags any that jump from ≈0 to a lot:</p>
+  <pre><span class="cm"># share of each signal present WITHOUT JS</span>
+visible = raw[key] / rendered[key]          <span class="cm"># 1.0 = fully server-rendered</span>
+js_dep  = rendered[key] &gt; 0 <span class="k">and</span> visible &lt; 0.5   <span class="cm"># needs JS to exist</span>
+<span class="cm"># headline keys on visible TEXT: &gt;=90% server-rendered, &lt;=10% client-rendered</span></pre>
+
+  <div class="do">
+    <b>Do this now:</b>
+    <p style="margin:.5rem 0 0">1. Self-check (offline): <code>python3 tools/render_gap.py --demo</code></p>
+    <p style="margin:.4rem 0 0">2. Pick a page. Save its rendered DOM as <code>rendered.html</code> (DevTools → Copy outerHTML), then:<br><code>python3 tools/render_gap.py https://yoursite.com/page rendered.html</code></p>
+    <p style="margin:.4rem 0 0">3. Test a <b>known SPA</b> (a React/Vue app route) the same way — watch every signal flag <span style="color:var(--bad)">JS-DEP</span>. That’s what a no-JS crawler sees.</p>
+  </div>
+
+  <div class="runbox"><span class="cmd">$ python3 tools/render_gap.py https://app.example.com/blog/geo rendered.html</span>
+
+  Render gap — raw HTML (no JS)  vs  rendered DOM (after JS)
+  <span class="dim">------------------------------------------------------------</span>
+  signal             no JS  with JS  visible   flag
+  visible words          0      209      0%   <span class="miss">JS-DEP</span>
+  &lt;a&gt; links              0        3      0%   <span class="miss">JS-DEP</span>
+  JSON-LD blocks         0        1      0%   <span class="miss">JS-DEP</span>
+  &lt;h1&gt; headings          0        1      0%   <span class="miss">JS-DEP</span>
+  &lt;h2&gt; headings          0        1      0%   <span class="miss">JS-DEP</span>
+  <span class="dim">------------------------------------------------------------</span>
+  <span class="miss">VERDICT: CLIENT-SIDE RENDERED</span> — the raw HTML is an empty shell.
+  No-JS AI crawlers see ~nothing; Googlebot indexes it only on
+  the deferred render wave.</div>
+
+  <div class="gotcha">
+    <b>The JSON-LD trap: your perfect schema from 0003 can be invisible.</b> If you inject structured data through Google Tag Manager or client-side JS, it lives <em>only</em> in the rendered DOM — so <code>schema_tool.py</code> validates it, Googlebot may pick it up on wave 2, but a no-JS AI crawler never sees a single property.<sup>[3]</sup> Same story for client-rendered <code>&lt;title&gt;</code> and canonical: <code>crawl_audit.py</code> can wave a page through while the raw response is an empty shell. <b>Passing the crawl/index gate ≠ the content is actually there.</b> Put facts in the HTML the server sends.
+  </div>
+
+  <p style="font-size:.88rem; color:var(--muted)">Ceiling to know: <code>render_gap.py</code> doesn’t run a browser — you supply the rendered DOM, the same way 0005’s tracker takes engine output you captured. Its “visible words” counts text nodes, not layout; a fully JS-built page that Google renders fine will still flag here, and that’s the point — it shows the <em>no-JS</em> view, which is one real audience, not a verdict on Googlebot.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz" id="quiz">
+    <p class="kicker" style="color:var(--seo)">Retrieval practice · answer from memory</p>
+    <h2 style="margin-top:.4rem">Mind the gap</h2>
+
+    <div class="q-block" data-correct="2">
+      <div class="qnum">Question 1 / 4</div>
+      <div class="qtext">In Google’s pipeline, when does your JavaScript actually run?</div>
+      <div class="opts">
+        <button class="opt">never — Google ignores JS entirely</button>
+        <button class="opt">during the crawl, in the same request</button>
+        <button class="opt">later, in a separate deferred render queue</button>
+        <button class="opt">only if you submit a sitemap</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="1">
+      <div class="qnum">Question 2 / 4</div>
+      <div class="qtext">Why can <code>crawl_audit.py</code> print PASS on a page with no visible content?</div>
+      <div class="opts">
+        <button class="opt">it checks rankings, not content</button>
+        <button class="opt">it fetches raw HTML with urllib and never runs JS</button>
+        <button class="opt">robots.txt hid the content from it</button>
+        <button class="opt">the page used SSR</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="0">
+      <div class="qnum">Question 3 / 4</div>
+      <div class="qtext">Why is client-side rendering worse for AEO than for classic SEO?</div>
+      <div class="opts">
+        <button class="opt">many standalone AI crawlers don’t run JS, so they see the empty shell</button>
+        <button class="opt">AI engines penalize React sites on purpose</button>
+        <button class="opt">JSON-LD is banned in AI answers</button>
+        <button class="opt">it isn’t — both handle it identically</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q-block" data-correct="3">
+      <div class="qnum">Question 4 / 4</div>
+      <div class="qtext">A signal jumps from 0 (raw) to many (rendered). What does <code>render_gap.py</code> call it, and what’s the fix?</div>
+      <div class="opts">
+        <button class="opt">a rich result — submit it to Search Console</button>
+        <button class="opt">a canonical conflict — pick one URL</button>
+        <button class="opt">a robots block — edit robots.txt</button>
+        <button class="opt">JS-dependent — move that content into the server’s HTML response</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+  </div>
+
+  <div class="primary">
+    <div class="ttl">Primary source — read this next (≈10 min)</div>
+    <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics">“Understand the JavaScript SEO basics” — Google Search Central</a>
+    <p style="margin:.4rem 0 0; font-size:.9rem; color:#555">The three phases (crawl → render → index) and why render is a deferred queue, from the engine itself. Pair it with the rendering note in <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">“How Search Works”</a>, and the AI-crawler-control gap in <a href="../RESOURCES.md"><code>RESOURCES.md</code></a>.</p>
+  </div>
+
+  <div class="ask">
+    <b>Stuck or curious?</b> Ask your teacher: “wire render_gap to a headless Chrome so it captures the rendered DOM itself”, “add a dynamic-rendering / prerender check”, “diff JSON-LD property-by-property across raw vs rendered”, “show me SSR vs SSG vs hydration for my framework” — happy to build the next piece with you.
+  </div>
+
+  <nav class="links">
+    <a href="0005-measuring-it.html">← Lesson 0005</a>
+    <a href="../reference/glossary.html">📖 Glossary</a>
+    <a href="../RESOURCES.md">📚 Resources</a>
+    <span style="color:var(--muted)">Next: <em>0007 — sitemaps + IndexNow: telling engines you changed</em> →</span>
+  </nav>
+
+  <footer>
+    Lesson 0006 · The JS-Rendering Gap · SEO/AEO for builders.<br>
+    [1] Google, <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics">“Understand the JavaScript SEO basics”</a> — crawl / render / index phases; render is a deferred queue (“Once Google’s resources allow, a headless Chrome renders the page and executes the JavaScript”). &nbsp;
+    [2] Google, <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">“In-depth guide to how Google Search works”</a> — renders + runs JS “using a recent version of Chrome.” &nbsp;
+    [3] RESOURCES.md “Gaps” — no stable spec for AI-crawler controls; trackers/crawlers commonly fetch raw HTML.
+  </footer>
+</div>
+
+<script>
+  let answered = 0, correct = 0;
+  const total = document.querySelectorAll('.q-block').length;
+  const fbOk = [
+    "Right — render is a separate, deferred queue, not part of the crawl.",
+    "Correct — it's a urllib fetch of the raw HTML; no JS ever runs.",
+    "Yes — no-JS AI crawlers see the empty shell, while Googlebot eventually renders.",
+    "Correct — JS-dependent; the fix is to put it in the server's HTML (SSR/SSG)."];
+  const fbNo = [
+    "Google does run JS — but later, in a deferred render queue after the crawl.",
+    "It fetches raw HTML with urllib and never executes JavaScript.",
+    "Standalone AI crawlers commonly skip JS, so CSR content is missing for AEO.",
+    "It's flagged JS-DEP; move that content into the server-rendered HTML."];
+  document.querySelectorAll('.q-block').forEach((q, qi) => {
+    const opts = [...q.querySelectorAll('.opt')];
+    const fb = q.querySelector('.fb');
+    const right = +q.dataset.correct;
+    opts.forEach((opt, oi) => opt.addEventListener('click', () => {
+      if (q.dataset.done) return;
+      q.dataset.done = "1"; answered++;
+      opts.forEach(o => o.disabled = true);
+      opts[right].classList.add('correct');
+      if (oi === right){ correct++; fb.textContent = fbOk[qi]; fb.className = 'fb show ok'; }
+      else { opt.classList.add('wrong'); fb.textContent = fbNo[qi]; fb.className = 'fb show no'; }
+      if (answered === total){
+        document.getElementById('score').textContent = `Score: ${correct} / ${total} — ` +
+          (correct === total ? "you can spot the render gap now. Next: sitemaps + IndexNow (0007)."
+           : "reread 'Two waves, not one', then run render_gap.py on a real SPA route.");
+      }
+    }));
+  });
+</script>
+</body>
+</html>

@@ -12,6 +12,8 @@ All URLs verified resolving as of 2026-06-17. Knowledge for lessons is drawn fro
   The crawl → index → serve pipeline from the engine itself. Use for: Lesson 0001 (the two pipelines), anything about the classic pipeline mechanics.
 - [SEO for developers (Get started) — Google Search Central](https://developers.google.com/search/docs/fundamentals/get-started-developers)
   Developer-angled entry point: rendering, JS SEO, technical requirements. Reach for it when building tooling, not writing content.
+- [Understand the JavaScript SEO basics — Google Search Central](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)
+  The crawl → render → index phases and why rendering is a *deferred queue* ("Once Google's resources allow, a headless Chrome renders the page and executes the JavaScript"). Use for: Lesson 0006 (the JS-rendering gap), anything about client-side rendering, SSR/SSG, or why a no-JS crawler misses content.
 - [Introduction to structured data markup — Google Search Central](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)
   How JSON-LD/Microdata/RDFa drive rich results. Read before automating any schema generation.
 - [Getting Started — schema.org](https://schema.org/docs/gs.html)

@@ -65,6 +65,12 @@
       <dt>Indexing <span class="tag seo">SEO</span></dt>
       <dd>The engine parses a crawled page, renders it, and stores it in a giant searchable database. A page that isn't indexed can never rank.</dd>
 
+      <dt>Rendering (two-wave / deferred) <span class="tag both">BOTH</span></dt>
+      <dd>Google processes JS pages in phases: it crawls the <em>raw HTML</em> first, then — in a <em>separate, deferred queue</em>, once resources allow — a headless Chrome runs the JavaScript and re-indexes what it produced. Content that only exists after JS is indexed late, or never by bots that don't render.</dd>
+
+      <dt>CSR vs SSR / SSG <span class="tag both">BOTH</span></dt>
+      <dd><b>Client-side rendering (CSR):</b> the server sends an empty shell (<code>&lt;div id="root"&gt;</code>) and JS builds the page in the browser — invisible to no-JS bots. <b>Server-side rendering (SSR)</b> / <b>static site generation (SSG):</b> the content is in the first HTML response, seen by every bot immediately. For SEO/AEO, get facts into the server's HTML.</dd>
+
       <dt>Ranking <span class="tag seo">SEO</span></dt>
       <dd>For a given query, the engine orders indexed pages by hundreds of signals (relevance, links, quality, freshness). Decides position.</dd>
 
