@@ -6,5 +6,6 @@ import ...` resolves with no path glue. The package's test surface is
 tools/test_seolib.py (run from the repo root).
 """
 from .domain import domain
+from .fetch import fetch, fixture, Response
 
-__all__ = ["domain"]
+__all__ = ["domain", "fetch", "fixture", "Response"]

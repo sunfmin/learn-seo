@@ -10,13 +10,14 @@ Usage:
     python3 crawl_audit.py https://example.com/some/page
     python3 crawl_audit.py --demo      # offline self-check, no network
 
-Stdlib only. No pip install.
+Stdlib only (no pip); imports the shared seolib core — see CONTEXT.md / ADR 0001.
 """
 import sys
-import urllib.request
 import urllib.robotparser
 from urllib.parse import urlparse
 from html.parser import HTMLParser
+
+from seolib import fetch
 
 # ponytail: robots.txt matching is prefix-based, so the bare token "Googlebot"
 # matches Google's rules fine. Swap to your own UA to test as a different bot.
@@ -67,31 +68,28 @@ def robots_allows(url):
     return rp.can_fetch(UA, url)
 
 
-def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=15) as r:
-        charset = r.headers.get_content_charset() or "utf-8"
-        body = r.read(300_000).decode(charset, "replace")
-        return getattr(r, "status", 200), r.geturl(), r.headers.get("X-Robots-Tag", ""), body
+def audit(url, *, fetcher=fetch, robots_ok=robots_allows):
+    """Return list of (gate, label, passed) checks.
 
-
-def audit(url):
-    """Return (list of (gate, label, passed) checks)."""
-    rows = [("CRAWL", "robots.txt allows the bot", robots_allows(url))]
+    fetcher/robots_ok are the seams — inject a seolib.fixture and a stub to
+    exercise this end-to-end offline (see tools/test_seolib.py).
+    """
+    rows = [("CRAWL", "robots.txt allows the bot", robots_ok(url))]
     try:
-        status, final, xrobots, body = fetch(url)
+        resp = fetcher(url, ua=UA)
     except Exception as e:
         rows.append(("CRAWL", f"page fetches OK ({e})", False))
         return rows
-    rows.append(("CRAWL", f"page returns success ({status})", 200 <= status < 400))
+    rows.append(("CRAWL", f"page returns success ({resp.status})", 200 <= resp.status < 400))
 
-    s = scan_html(body)
+    s = scan_html(resp.body)
+    xrobots = resp.header("x-robots-tag")
     noindex = "noindex" in xrobots.lower() or (s.meta_robots and "noindex" in s.meta_robots)
     rows.append(("INDEX", "no noindex directive", not noindex))
     rows.append(("INDEX", "has a <title>", bool(s.title)))
     rows.append(("INDEX", "declares a canonical URL", bool(s.canonical)))
-    if final != url:
-        rows.append(("CRAWL", f"note: redirected to {final}", True))
+    if resp.url != url:
+        rows.append(("CRAWL", f"note: redirected to {resp.url}", True))
     return rows
 
 
