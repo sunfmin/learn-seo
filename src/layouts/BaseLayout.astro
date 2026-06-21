@@ -1,0 +1,65 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** override the wrap width (e.g. "wide") */
+  wrapClass?: string;
+  /** optional JSON-LD object injected into <head> (dogfooding Lesson 0003) */
+  jsonld?: Record<string, unknown>;
+}
+
+const { title, description, jsonld } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/lessons/', label: 'Lessons' },
+  { href: '/reference/glossary.html', label: 'Glossary' },
+  { href: '/resources/', label: 'Resources' },
+  { href: '/tools/', label: 'Tools' },
+];
+const here = Astro.url.pathname;
+const isCurrent = (href: string) =>
+  href === '/' ? here === '/' : here.startsWith(href);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🔎</text></svg>" />
+  {jsonld && <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />}
+</head>
+<body>
+  <header class="site-head">
+    <div class="bar">
+      <a class="brand" href="/">SEO<span class="dot">·</span>AEO <span style="color:var(--muted);font-weight:400">for builders</span></a>
+      <nav>
+        {nav.map((n) => (
+          <a href={n.href} aria-current={isCurrent(n.href) ? 'page' : undefined}>{n.label}</a>
+        ))}
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <slot />
+  </main>
+
+  <footer class="site-foot">
+    A hands-on SEO / AEO course for developers — and itself a server-rendered,
+    sitemap-emitting Astro site (dogfooding <a href="/lessons/0006-the-js-rendering-gap.html">0006</a>
+    &amp; <a href="/lessons/0007-sitemaps-and-indexnow.html">0007</a>).
+    Knowledge grounded in <a href="/resources/">primary sources</a>.
+  </footer>
+</body>
+</html>

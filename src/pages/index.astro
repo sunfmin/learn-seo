@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { lessons } from '../data/lessons';
+
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: 'SEO, AEO & Marketing Automation for builders',
+  description:
+    'A hands-on, developer-first course on classic search (SEO) and AI answer engines (AEO/GEO), each lesson shipping a runnable audit/automation tool.',
+  provider: { '@type': 'Organization', name: 'learn-seo' },
+  hasCourseInstance: {
+    '@type': 'CourseInstance',
+    courseMode: 'online',
+    courseWorkload: `${lessons.length} short lessons, one tangible win each`,
+  },
+};
+---
+<BaseLayout
+  title="SEO & AEO for builders — a hands-on course"
+  description="Learn the crawl→index→rank and retrieve→generate→cite pipelines well enough to build software against them. Eight lessons, eight runnable tools."
+  jsonld={jsonld}
+>
+  <div class="wrap wide">
+    <p class="kicker">SEO · AEO · Marketing automation</p>
+    <h1>Make software that does SEO &amp; AEO.</h1>
+    <p class="sub">For developers who'd rather encode the mechanism than memorize the best practice.</p>
+
+    <p class="lede">
+      Two pipelines decide whether anyone finds your content. This course teaches
+      both deep enough to <b>build tooling against them</b> — and every lesson hands
+      you a runnable script that does exactly that.
+    </p>
+
+    <div class="pipes">
+      <div class="pipe seo">
+        <div class="h">Classic search — SEO</div>
+        <div class="b"><b>crawl → index → rank → serve.</b> A bot fetches, an index stores, a ranker orders the ten blue links. Measured by a first-party API.</div>
+      </div>
+      <div class="pipe aeo">
+        <div class="h">AI answer engines — AEO / GEO</div>
+        <div class="b"><b>retrieve → generate → cite.</b> An engine pulls passages, writes one answer, and links its sources. The win is being <em>cited</em>.</div>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <a class="btn primary" href="/lessons/">Start the course →</a>
+      <a class="btn ghost" href="/tools/">Browse the tools</a>
+    </div>
+
+    <h2>The lessons</h2>
+    <div class="grid">
+      {lessons.map((l) => (
+        <a class="card" href={`/lessons/${l.slug}`}>
+          <span class="num">Lesson {l.num}</span>
+          <span class="ct">{l.title}</span>
+          <span class="cd">{l.blurb}</span>
+          {l.tool && <span class="tool">▸ {l.tool}</span>}
+        </a>
+      ))}
+    </div>
+
+    <h2>How it's built</h2>
+    <p>
+      This site practices what it teaches. It's a <b>server-rendered Astro</b> site
+      (content in the first byte — <a href="/lessons/0006-the-js-rendering-gap.html">Lesson 0006</a>),
+      it emits a <b>sitemap.xml</b> at build (<a href="/lessons/0007-sitemaps-and-indexnow.html">Lesson 0007</a>),
+      and each page carries canonical, Open Graph, and JSON-LD
+      (<a href="/lessons/0003-structured-data.html">Lesson 0003</a>,
+      <a href="/lessons/0008-eeat.html">0008</a>). Every claim in the lessons is
+      grounded in a <a href="/resources/">primary source</a>, never memory.
+    </p>
+  </div>
+</BaseLayout>

@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { lessons } from '../../data/lessons';
+---
+<BaseLayout
+  title="Lessons — SEO & AEO for builders"
+  description="Eight short, developer-first lessons spanning classic search and AI answer engines, each with a runnable audit/automation tool."
+  jsonld={{
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: lessons.map((l, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: `Lesson ${l.num}: ${l.title}`,
+      url: `${Astro.site}lessons/${l.slug}`,
+    })),
+  }}
+>
+  <div class="wrap wide">
+    <p class="kicker">The course · {lessons.length} lessons</p>
+    <h1>Lessons</h1>
+    <p class="sub">Each one ends in a tangible win — a script you run, a page you fix, a number you can track.</p>
+
+    <div class="grid">
+      {lessons.map((l) => (
+        <a class="card" href={`/lessons/${l.slug}`}>
+          <span class="num">Lesson {l.num}</span>
+          <span class="ct">{l.title}</span>
+          <span class="cd">{l.blurb}</span>
+          {l.tool && <span class="tool">▸ {l.tool}</span>}
+        </a>
+      ))}
+    </div>
+
+    <p style="margin-top:2rem; font-size:.92rem; color:var(--muted)">
+      Also: the <a href="/reference/glossary.html">glossary</a> (shared vocabulary,
+      tagged SEO / AEO / BOTH) and the <a href="/resources/">resources</a> (every
+      primary source the lessons cite).
+    </p>
+  </div>
+</BaseLayout>

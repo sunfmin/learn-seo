@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+// Single source of truth: render the repo's RESOURCES.md directly, no copy.
+import { Content } from '../../../RESOURCES.md';
+---
+<BaseLayout
+  title="Resources — primary sources for SEO & AEO"
+  description="Every primary source the lessons cite: Google Search Central docs, the sitemaps.org spec, the IndexNow protocol, the GEO paper, and the gaps that have no settled answer."
+>
+  <article class="prose">
+    <Content />
+  </article>
+</BaseLayout>
