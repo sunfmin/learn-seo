@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ensure tools/ importable
 
-from seolib import domain, fetch, fixture, Response
+from seolib import domain, fetch, fixture, Response, parse
 
 
 def test_domain():
@@ -19,6 +19,26 @@ def test_domain():
     assert domain("http://moz.com") == "moz.com"
     assert domain("https://sub.example.co.uk/p?q=1") == "sub.example.co.uk"
     assert domain("not-a-url") == ""
+
+
+def test_page_signals():
+    html = ('<html><head><title>Hi</title>'
+            '<meta name="robots" content="noindex"><meta name="author" content="Jane">'
+            '<link rel="canonical" href="https://x.com/a">'
+            '<script type="application/ld+json">{"@type":"Article"}</script></head>'
+            '<body><h1>One</h1><h2>Two</h2><p>three four five</p>'
+            '<a href="/a">x</a><a rel="author" href="/me">me</a>'
+            '<style>.c{color:red}</style><script>var a=1;</script></body></html>')
+    pg = parse(html)
+    assert pg.title == "Hi"
+    assert pg.meta.get("robots") == "noindex" and pg.meta.get("author") == "Jane"
+    assert pg.canonical == "https://x.com/a"
+    assert pg.rel_author is True
+    assert pg.links == ["/a", "/me"]
+    assert pg.headings == {"h1": 1, "h2": 1}
+    # One + Two + (three four five) + x + me = 7; title/script/style excluded
+    assert pg.words == 7
+    assert len(pg.ld_blocks) == 1
 
 
 def test_fetch_fixture_seam():

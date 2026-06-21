@@ -18,7 +18,8 @@ the RAW response (no JS) and the RENDERED DOM (after JS) — and diffs them:
 A signal that jumps from ~0 in raw to a lot in rendered is JS-DEPENDENT:
 invisible to no-JS bots, and delayed for Google until the render wave.
 
-Stdlib only. It does NOT run a browser. You capture the rendered DOM yourself
+Stdlib only (imports the shared seolib core — see CONTEXT.md / ADR 0001). It
+does NOT run a browser. You capture the rendered DOM yourself
 (DevTools -> Elements -> right-click <html> -> Copy -> Copy outerHTML, paste
 into rendered.html) and supply it; the raw side this tool can fetch for you.
 
@@ -32,8 +33,8 @@ Usage:
     python3 render_gap.py --demo      # offline self-check, no network
 """
 import sys
-import urllib.request
-from html.parser import HTMLParser
+
+from seolib import fetch, parse
 
 UA = "Googlebot"
 
@@ -47,79 +48,17 @@ SIGNALS = [
 ]
 
 
-class Extract(HTMLParser):
-    """Pull the signals that decide indexability from one HTML string.
-
-    Skips <script>/<style> text (it isn't visible content) but DOES count
-    application/ld+json blocks, since structured data injected by JS is a
-    classic thing a no-JS bot never sees.
-    """
-    def __init__(self):
-        super().__init__()
-        self.words = 0
-        self.links = 0
-        self.jsonld = 0
-        self.title = None
-        self.h1 = 0
-        self.h2 = 0
-        self._skip = 0          # depth inside non-ld script/style
-        self._in_title = False
-        self._in_ld = False
-        self._ld_buf = ""
-
-    def handle_starttag(self, tag, attrs):
-        a = {k.lower(): (v or "") for k, v in attrs}
-        if tag == "a" and a.get("href"):
-            self.links += 1
-        elif tag == "title":
-            self._in_title = True
-        elif tag == "h1":
-            self.h1 += 1
-        elif tag == "h2":
-            self.h2 += 1
-        elif tag == "script":
-            if "ld+json" in a.get("type", "").lower():
-                self._in_ld, self._ld_buf = True, ""
-            else:
-                self._skip += 1
-        elif tag == "style":
-            self._skip += 1
-
-    def handle_startendtag(self, tag, attrs):
-        self.handle_starttag(tag, attrs)   # count self-closing <a .../> etc.
-
-    def handle_endtag(self, tag):
-        if tag == "title":
-            self._in_title = False
-        elif tag == "script":
-            if self._in_ld:
-                if self._ld_buf.strip():
-                    self.jsonld += 1
-                self._in_ld = False
-            elif self._skip:
-                self._skip -= 1
-        elif tag == "style" and self._skip:
-            self._skip -= 1
-
-    def handle_data(self, data):
-        if self._in_ld:
-            self._ld_buf += data
-            return
-        if self._skip:
-            return
-        if self._in_title:
-            t = data.strip()
-            if t:
-                self.title = (self.title or "") + t
-        else:
-            self.words += len(data.split())
-
-
 def extract(html):
-    p = Extract()
-    p.feed(html)
-    return {"words": p.words, "links": p.links, "jsonld": p.jsonld,
-            "title": p.title, "h1": p.h1, "h2": p.h2}
+    """The signals that decide indexability — read off the shared seolib.Page.
+
+    A no-JS bot sees only what's here in the raw HTML; ld+json blocks count
+    because JS-injected structured data is a classic thing such a bot misses.
+    """
+    pg = parse(html)
+    return {"words": pg.words, "links": len(pg.links),
+            "jsonld": sum(1 for b in pg.ld_blocks if b.strip()),
+            "title": pg.title,
+            "h1": pg.headings.get("h1", 0), "h2": pg.headings.get("h2", 0)}
 
 
 def analyze(raw_html, rendered_html):
@@ -168,13 +107,6 @@ def report(raw_html, rendered_html):
         print(f"  JS-only signals (a no-JS bot misses these): {', '.join(flagged)}")
     print()
     return rows
-
-
-def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=15) as r:
-        charset = r.headers.get_content_charset() or "utf-8"
-        return r.read(800_000).decode(charset, "replace")
 
 
 # raw shell: the SPA pattern — empty <div id=root>, JS bundle, nothing else.
@@ -228,7 +160,7 @@ if __name__ == "__main__":
         demo()
     elif len(args) == 2:
         src, rendered_path = args
-        raw_html = fetch(src) if src.startswith(("http://", "https://")) \
+        raw_html = fetch(src, ua=UA).body if src.startswith(("http://", "https://")) \
             else open(src, encoding="utf-8").read()
         rendered_html = open(rendered_path, encoding="utf-8").read()
         report(raw_html, rendered_html)

@@ -15,46 +15,12 @@ Stdlib only (no pip); imports the shared seolib core — see CONTEXT.md / ADR 00
 import sys
 import urllib.robotparser
 from urllib.parse import urlparse
-from html.parser import HTMLParser
 
-from seolib import fetch
+from seolib import fetch, parse
 
 # ponytail: robots.txt matching is prefix-based, so the bare token "Googlebot"
 # matches Google's rules fine. Swap to your own UA to test as a different bot.
 UA = "Googlebot"
-
-
-class HeadScan(HTMLParser):
-    """Pull the few <head> signals the index cares about."""
-    def __init__(self):
-        super().__init__()
-        self.title = None
-        self.meta_robots = None
-        self.canonical = None
-        self._in_title = False
-
-    def handle_starttag(self, tag, attrs):
-        a = {k.lower(): (v or "") for k, v in attrs}
-        if tag == "title":
-            self._in_title = True
-        elif tag == "meta" and a.get("name", "").lower() == "robots":
-            self.meta_robots = a.get("content", "").lower()
-        elif tag == "link" and "canonical" in a.get("rel", "").lower():
-            self.canonical = a.get("href")
-
-    def handle_endtag(self, tag):
-        if tag == "title":
-            self._in_title = False
-
-    def handle_data(self, data):
-        if self._in_title and data.strip():
-            self.title = (self.title or "") + data.strip()
-
-
-def scan_html(html):
-    p = HeadScan()
-    p.feed(html)
-    return p
 
 
 def robots_allows(url):
@@ -82,12 +48,12 @@ def audit(url, *, fetcher=fetch, robots_ok=robots_allows):
         return rows
     rows.append(("CRAWL", f"page returns success ({resp.status})", 200 <= resp.status < 400))
 
-    s = scan_html(resp.body)
-    xrobots = resp.header("x-robots-tag")
-    noindex = "noindex" in xrobots.lower() or (s.meta_robots and "noindex" in s.meta_robots)
+    pg = parse(resp.body)
+    meta_robots = (pg.meta.get("robots") or "").lower()
+    noindex = "noindex" in resp.header("x-robots-tag").lower() or "noindex" in meta_robots
     rows.append(("INDEX", "no noindex directive", not noindex))
-    rows.append(("INDEX", "has a <title>", bool(s.title)))
-    rows.append(("INDEX", "declares a canonical URL", bool(s.canonical)))
+    rows.append(("INDEX", "has a <title>", bool(pg.title)))
+    rows.append(("INDEX", "declares a canonical URL", bool(pg.canonical)))
     if resp.url != url:
         rows.append(("CRAWL", f"note: redirected to {resp.url}", True))
     return rows
@@ -109,16 +75,16 @@ def report(url):
 
 
 def demo():
-    """Offline self-check: the parser logic must catch a bad page."""
-    good = scan_html('<html><head><title>Hi</title>'
-                     '<link rel="canonical" href="https://x.com/a"></head><body>ok</body></html>')
+    """Offline self-check: parsing (via seolib.page) must surface index signals."""
+    good = parse('<html><head><title>Hi</title>'
+                 '<link rel="canonical" href="https://x.com/a"></head><body>ok</body></html>')
     assert good.title == "Hi", good.title
     assert good.canonical == "https://x.com/a", good.canonical
-    assert good.meta_robots is None
+    assert good.meta.get("robots") is None
 
-    bad = scan_html('<html><head><meta name="robots" content="NOINDEX, nofollow">'
-                    '</head><body>x</body></html>')
-    assert bad.meta_robots and "noindex" in bad.meta_robots, bad.meta_robots
+    bad = parse('<html><head><meta name="robots" content="NOINDEX, nofollow">'
+                '</head><body>x</body></html>')
+    assert "noindex" in (bad.meta.get("robots") or "").lower(), bad.meta
     assert bad.title is None and bad.canonical is None
     print("demo: all parser assertions passed.")
 

@@ -15,7 +15,8 @@ engines (and AI answer engines) something to trust; missing = it's anonymous.
 Grouped by the letter each signal supports. Trust signals are weighted heaviest
 because Google says trust is the centre of the family.
 
-Stdlib only. Reads a URL (fetches) or a local .html file.
+Stdlib only (imports the shared seolib core — see CONTEXT.md / ADR 0001).
+Reads a URL (fetches) or a local .html file.
 
 Usage:
     python3 eeat_audit.py https://site.com/blog/post
@@ -24,51 +25,10 @@ Usage:
 """
 import json
 import sys
-import urllib.request
-from urllib.parse import urlparse
-from html.parser import HTMLParser
 
-UA = "Mozilla/5.0 (compatible; eeat-audit/1.0)"
+from seolib import domain, fetch, parse
+
 ARTICLE = {"article", "blogposting", "newsarticle", "techarticle", "scholarlyarticle"}
-
-
-class Scan(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.meta_author = None
-        self.rel_author = False
-        self.links = []            # all href values
-        self.ld_blocks = []        # raw application/ld+json text
-        self._in_ld = False
-        self._ld = ""
-
-    def _starttag(self, tag, attrs):
-        a = {k.lower(): (v or "") for k, v in attrs}
-        rel = a.get("rel", "").lower()
-        if tag == "meta" and a.get("name", "").lower() == "author" and a.get("content"):
-            self.meta_author = a["content"].strip()
-        if tag in ("a", "link"):
-            if "author" in rel.split():
-                self.rel_author = True
-            if a.get("href"):
-                self.links.append(a["href"])
-        if tag == "script" and "ld+json" in a.get("type", "").lower():
-            self._in_ld, self._ld = True, ""
-
-    def handle_starttag(self, tag, attrs):
-        self._starttag(tag, attrs)
-
-    def handle_startendtag(self, tag, attrs):
-        self._starttag(tag, attrs)
-
-    def handle_endtag(self, tag):
-        if tag == "script" and self._in_ld:
-            self.ld_blocks.append(self._ld)
-            self._in_ld = False
-
-    def handle_data(self, data):
-        if self._in_ld:
-            self._ld += data
 
 
 def flatten_ld(blocks):
@@ -99,9 +59,8 @@ def _types(node):
 
 def analyze(html, base_url=None):
     """Return (facts dict, list of (letter, label, ok, detail) rows)."""
-    s = Scan()
-    s.feed(html)
-    nodes = flatten_ld(s.ld_blocks)
+    pg = parse(html)
+    nodes = flatten_ld(pg.ld_blocks)
     arts = [n for n in nodes if ARTICLE & set(_types(n))]
     persons = [n for n in nodes if "person" in _types(n)]
 
@@ -110,18 +69,18 @@ def analyze(html, base_url=None):
 
     author_val = next((a.get("author") for a in arts if a.get("author")), None)
     author_in_schema = bool(author_val)
-    author_named = bool(s.meta_author or s.rel_author or author_in_schema)
+    author_named = bool(pg.meta.get("author") or pg.rel_author or author_in_schema)
     author_linked = (isinstance(author_val, dict) and bool(author_val.get("sameAs"))) \
         or any(p.get("sameAs") for p in persons)
 
-    base_host = urlparse(base_url).netloc.lower() if base_url else None
+    base_host = domain(base_url) if base_url else None
     outbound, about = 0, False
-    for h in s.links:
+    for h in pg.links:
         hl = h.lower()
         if "about" in hl or "contact" in hl:
             about = True
         if hl.startswith(("http://", "https://")):
-            host = urlparse(h).netloc.lower()
+            host = domain(h)
             if base_host is None or host != base_host:
                 outbound += 1
     https = base_url.startswith("https://") if base_url else None
@@ -147,7 +106,7 @@ def analyze(html, base_url=None):
         rows.insert(4, ("T", "served over HTTPS", https, base_url.split("://")[0]))
 
     facts = {"arts": len(arts), "persons": len(persons), "outbound": outbound,
-             "meta_author": s.meta_author}
+             "meta_author": pg.meta.get("author")}
     return facts, rows
 
 
@@ -175,13 +134,6 @@ def report(html, base_url=None):
                 if present <= 2 else "Some signals missing — fill the gaps above."))
     print()
     return rows
-
-
-def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=15) as r:
-        charset = r.headers.get_content_charset() or "utf-8"
-        return r.read(800_000).decode(charset, "replace"), r.geturl()
 
 
 GOOD = """<html><head>
@@ -232,8 +184,8 @@ if __name__ == "__main__":
     if args == ["--demo"]:
         demo()
     elif args and args[0].startswith(("http://", "https://")) and len(args) == 1:
-        html, final = fetch(args[0])
-        report(html, base_url=final)
+        resp = fetch(args[0])
+        report(resp.body, base_url=resp.url)
     elif args and not args[0].startswith("-"):
         base = args[args.index("--base") + 1] if "--base" in args else None
         with open(args[0], encoding="utf-8") as f:

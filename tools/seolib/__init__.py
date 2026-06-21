@@ -7,5 +7,6 @@ tools/test_seolib.py (run from the repo root).
 """
 from .domain import domain
 from .fetch import fetch, fixture, Response
+from .page import parse, Page
 
-__all__ = ["domain", "fetch", "fixture", "Response"]
+__all__ = ["domain", "fetch", "fixture", "Response", "parse", "Page"]
