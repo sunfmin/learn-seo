@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { lessons } from '../data/lessons';
+import { lessons, toolsForLesson } from '../data/lessons';
 
 const jsonld = {
   '@context': 'https://schema.org',
@@ -55,7 +55,9 @@ const jsonld = {
           <span class="num">Lesson {l.num}</span>
           <span class="ct">{l.title}</span>
           <span class="cd">{l.blurb}</span>
-          {l.tool && <span class="tool">▸ {l.tool}</span>}
+          {toolsForLesson(l.num).length > 0 && (
+            <span class="tool">▸ {toolsForLesson(l.num).map((t) => t.name).join(' · ')}</span>
+          )}
         </a>
       ))}
     </div>

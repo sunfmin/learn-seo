@@ -1,32 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-
-const tools = [
-  { name: 'crawl_audit.py', lesson: '0002', slug: '0002-crawlable-vs-indexable.html',
-    desc: 'Is a URL crawlable AND indexable? Checks robots.txt, status, noindex, title, canonical — the two gates before ranking.',
-    run: 'python3 tools/crawl_audit.py https://example.com/page' },
-  { name: 'schema_tool.py', lesson: '0003', slug: '0003-structured-data.html',
-    desc: 'JSON-LD structured-data linter. Validates required vs recommended schema.org properties so you actually earn the rich result.',
-    run: 'python3 tools/schema_tool.py --demo' },
-  { name: 'geo_lint.py', lesson: '0004', slug: '0004-writing-for-retrieval.html',
-    desc: 'GEO / writing-for-retrieval linter. Flags buried answers and non-self-contained chunks; rewards answer-first prose.',
-    run: 'python3 tools/geo_lint.py --demo' },
-  { name: 'citation_share.py', lesson: '0005', slug: '0005-measuring-it.html',
-    desc: 'Measures AI-citation coverage and share of voice from a set of answer-engine responses — the proxy every AEO tracker builds.',
-    run: 'python3 tools/citation_share.py --demo' },
-  { name: 'build_prompts.py', lesson: '0005', slug: '0005-measuring-it.html',
-    desc: 'Assembles a buyer-question prompt library (from an LLM fan-out or Search Console rows) in the shape citation_share.py consumes.',
-    run: 'python3 tools/build_prompts.py --demo' },
-  { name: 'render_gap.py', lesson: '0006', slug: '0006-the-js-rendering-gap.html',
-    desc: 'Diffs raw HTML vs the rendered DOM and flags content/links/JSON-LD that exist only after JavaScript — what no-JS bots miss.',
-    run: 'python3 tools/render_gap.py --demo' },
-  { name: 'sitemap_ping.py', lesson: '0007', slug: '0007-sitemaps-and-indexnow.html',
-    desc: 'Generates + validates a spec-compliant sitemap.xml, and builds a verified IndexNow push payload. The publish-and-notify step.',
-    run: 'python3 tools/sitemap_ping.py --demo' },
-  { name: 'eeat_audit.py', lesson: '0008', slug: '0008-eeat.html',
-    desc: 'Audits a page for the machine-detectable E-E-A-T proxy signals (author, sameAs, dates, publisher, sourcing). Not a score — a gap-finder.',
-    run: 'python3 tools/eeat_audit.py --demo' },
-];
+import { tools, slugForLesson } from '../../data/lessons';
 ---
 <BaseLayout
   title="Tools — SEO & AEO for builders"
@@ -46,7 +20,7 @@ const tools = [
       <div style="border:1px solid var(--rule); border-radius:.6rem; background:#fff; padding:1rem 1.1rem; margin:1rem 0">
         <div style="display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap">
           <code style="font-size:1.02rem; background:var(--seobg); color:var(--seo)">{t.name}</code>
-          <a style="font-size:.78rem; color:var(--muted)" href={`/lessons/${t.slug}`}>from Lesson {t.lesson} →</a>
+          <a style="font-size:.78rem; color:var(--muted)" href={`/lessons/${slugForLesson(t.lesson)}`}>from Lesson {t.lesson} →</a>
         </div>
         <p style="margin:.5rem 0 .6rem; font-size:.94rem; color:#333">{t.desc}</p>
         <pre><code>$ {t.run}</code></pre>
