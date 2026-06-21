@@ -5,9 +5,9 @@ Stdlib-only shared modules the lesson tools converge on. Tools run as
 import ...` resolves with no path glue. The package's test surface is
 tools/test_seolib.py (run from the repo root).
 """
-from . import ld
+from . import checklist, ld
 from .domain import domain
 from .fetch import fetch, fixture, Response
 from .page import parse, Page
 
-__all__ = ["domain", "fetch", "fixture", "Response", "parse", "Page", "ld"]
+__all__ = ["domain", "fetch", "fixture", "Response", "parse", "Page", "ld", "checklist"]

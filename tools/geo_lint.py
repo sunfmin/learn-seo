@@ -22,11 +22,13 @@ Usage:
     python3 geo_lint.py draft.md
     python3 geo_lint.py --demo
 
-Stdlib only.
+Stdlib only; imports the shared seolib core (checklist) — see CONTEXT.md / ADR 0001.
 """
 import re
 import sys
 from collections import Counter
+
+from seolib import checklist
 
 # words too common to count as a "stuffed" keyword
 STOP = set("""the a an and or but for nor so yet of to in on at by with from as
@@ -127,16 +129,13 @@ def check(text):
 def report(text):
     rows = check(text)
     passes = sum(1 for _, s, _ in rows if s == "PASS")
-    print("\n  GEO / retrieval-readiness lint")
-    print("  " + "-" * 56)
-    for sig, status, note in rows:
-        mark = "PASS" if status == "PASS" else "WARN"
-        print(f"  [{mark}] {sig:13} {note}")
-    print("  " + "-" * 56)
-    print(f"  SCORE: {passes}/{len(rows)} signals — "
-          + ("strong retrieval shape." if passes >= len(rows) - 1
-             else "fixable; each WARN is a concrete edit." if passes >= 3
-             else "weak — restructure before publishing.") + "\n")
+    body = [f"[{'PASS' if status == 'PASS' else 'WARN'}] {sig:13} {note}"
+            for sig, status, note in rows]
+    verdict = (f"SCORE: {passes}/{len(rows)} signals — "
+               + ("strong retrieval shape." if passes >= len(rows) - 1
+                  else "fixable; each WARN is a concrete edit." if passes >= 3
+                  else "weak — restructure before publishing."))
+    print(checklist.render("GEO / retrieval-readiness lint", body, verdict, width=56))
     return rows
 
 

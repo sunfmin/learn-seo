@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ensure tools/ importable
 
-from seolib import domain, fetch, fixture, Response, parse, ld
+from seolib import domain, fetch, fixture, Response, parse, ld, checklist
 
 
 def test_domain():
@@ -62,6 +62,17 @@ def test_schema_lint_live_page():
     )
     # Product offer is missing priceCurrency -> the linter must flag it on the live page
     assert any("priceCurrency" in m for _, m in issues), issues
+
+
+def test_checklist_render():
+    out = checklist.render("Title", ["[PASS] a", "[FAIL] b"], "VERDICT: x", width=10)
+    assert out == ("\n  Title\n"
+                   "  ----------\n"
+                   "  [PASS] a\n"
+                   "  [FAIL] b\n"
+                   "  ----------\n"
+                   "  VERDICT: x\n")
+    assert checklist.mark(True) == "PASS" and checklist.mark(False, no="WARN") == "WARN"
 
 
 def test_fetch_fixture_seam():

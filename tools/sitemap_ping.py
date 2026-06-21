@@ -30,6 +30,8 @@ Usage:
         --key 8e1f...  [--key-location https://site.com/8e1f.txt] [--send]
 
     python3 sitemap_ping.py --demo      # offline self-check, no network
+
+Stdlib only; imports the shared seolib core (checklist) — see CONTEXT.md / ADR 0001.
 """
 import json
 import re
@@ -38,6 +40,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 from xml.sax.saxutils import escape
+
+from seolib import checklist
 
 SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 SITEMAP_MAX_URLS = 50_000
@@ -166,15 +170,12 @@ def indexnow_send(payload):
 
 def report_check(data):
     rows = validate_sitemap(data)
-    print("\n  Sitemap check\n  " + "-" * 52)
-    for label, ok, detail in rows:
-        mark = "PASS" if ok else "FAIL"
-        tail = f"  ({detail})" if detail else ""
-        print(f"  [{mark}] {label}{tail}")
+    body = [f"[{checklist.mark(ok)}] {label}" + (f"  ({detail})" if detail else "")
+            for label, ok, detail in rows]
     bad = [r for r in rows if not r[1]]
-    print("  " + "-" * 52)
-    print("  VERDICT: valid sitemap.\n" if not bad
-          else f"  VERDICT: {len(bad)} problem(s) — engines may reject it.\n")
+    verdict = ("VERDICT: valid sitemap." if not bad
+               else f"VERDICT: {len(bad)} problem(s) — engines may reject it.")
+    print(checklist.render("Sitemap check", body, verdict, width=52))
     return rows
 
 

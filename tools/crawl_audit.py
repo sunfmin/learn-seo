@@ -16,7 +16,7 @@ import sys
 import urllib.robotparser
 from urllib.parse import urlparse
 
-from seolib import fetch, parse
+from seolib import checklist, fetch, parse
 
 # ponytail: robots.txt matching is prefix-based, so the bare token "Googlebot"
 # matches Google's rules fine. Swap to your own UA to test as a different bot.
@@ -61,16 +61,12 @@ def audit(url, *, fetcher=fetch, robots_ok=robots_allows):
 
 def report(url):
     rows = audit(url)
-    print(f"\n  Audit: {url}\n  " + "-" * 48)
-    for gate, label, ok in rows:
-        mark = "PASS" if ok else "FAIL"
-        print(f"  [{mark}] {gate:5} · {label}")
+    body = [f"[{checklist.mark(ok)}] {gate:5} · {label}" for gate, label, ok in rows]
     blocking = [r for r in rows if not r[2]]
-    print("  " + "-" * 48)
-    if blocking:
-        print(f"  VERDICT: cannot be indexed yet — {len(blocking)} gate(s) failing.\n")
-    else:
-        print("  VERDICT: crawlable + indexable. (Ranking is a separate fight.)\n")
+    verdict = (f"VERDICT: cannot be indexed yet — {len(blocking)} gate(s) failing."
+               if blocking
+               else "VERDICT: crawlable + indexable. (Ranking is a separate fight.)")
+    print(checklist.render(f"Audit: {url}", body, verdict, width=48))
     return rows
 
 

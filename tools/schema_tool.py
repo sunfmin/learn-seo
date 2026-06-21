@@ -21,7 +21,7 @@ Stdlib only; imports the shared seolib core — see CONTEXT.md / ADR 0001.
 import json
 import sys
 
-from seolib import fetch, ld
+from seolib import checklist, fetch, ld
 
 CONTEXT = "https://schema.org"
 
@@ -104,14 +104,10 @@ def lint(obj):
 def report(obj):
     issues = lint(obj)
     errors = [m for s, m in issues if s == "ERROR"]
-    print("\n  Linting JSON-LD: @type =", obj.get("@type"))
-    print("  " + "-" * 50)
-    if not issues:
-        print("  clean — no issues.")
-    for sev, msg in issues:
-        print(f"  [{sev:5}] {msg}")
-    print("  " + "-" * 50)
-    print(f"  VERDICT: {'INVALID — ' + str(len(errors)) + ' error(s) block the rich result.' if errors else 'valid (warnings are optional polish).'}\n")
+    body = [f"[{sev:5}] {msg}" for sev, msg in issues] or ["clean — no issues."]
+    verdict = ("VERDICT: INVALID — " + str(len(errors)) + " error(s) block the rich result."
+               if errors else "VERDICT: valid (warnings are optional polish).")
+    print(checklist.render(f"Linting JSON-LD: @type = {obj.get('@type')}", body, verdict, width=50))
     return issues
 
 
