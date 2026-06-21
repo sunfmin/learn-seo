@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ensure tools/ importable
 
-from seolib import domain, fetch, fixture, Response, parse
+from seolib import domain, fetch, fixture, Response, parse, ld
 
 
 def test_domain():
@@ -39,6 +39,29 @@ def test_page_signals():
     # One + Two + (three four five) + x + me = 7; title/script/style excluded
     assert pg.words == 7
     assert len(pg.ld_blocks) == 1
+
+
+def test_ld_extract_flatten_types():
+    html = ('<script type="application/ld+json">{"@type":"Article","headline":"H",'
+            '"author":{"@type":"Person","name":"Jane"}}</script>')
+    nodes = ld.extract(html)
+    assert any("article" in ld.types(n) for n in nodes)
+    assert any("person" in ld.types(n) for n in nodes)   # nested node flattened out
+    assert ld.flatten(["not json {{{"]) == []             # bad block ignored
+
+
+def test_schema_lint_live_page():
+    # the joined halves: extract JSON-LD from a page, then lint it. No network.
+    import schema_tool
+    page = ('<html><head><script type="application/ld+json">'
+            '{"@context":"https://schema.org","@type":"Product","name":"X",'
+            '"offers":{"@type":"Offer","price":"9.00"}}</script></head><body/></html>')
+    issues = schema_tool.report_page(
+        "https://shop.example/p",
+        fetcher=lambda url, **kw: fetch(url, transport=fixture({"https://shop.example/p": page}), **kw),
+    )
+    # Product offer is missing priceCurrency -> the linter must flag it on the live page
+    assert any("priceCurrency" in m for _, m in issues), issues
 
 
 def test_fetch_fixture_seam():

@@ -13,12 +13,15 @@ Usage:
     python3 schema_tool.py sample FAQPage        # print copy-paste JSON-LD
     python3 schema_tool.py sample Product
     python3 schema_tool.py lint mypage.json      # validate a JSON-LD file
+    python3 schema_tool.py page https://site/x   # lint the JSON-LD on a LIVE page
     python3 schema_tool.py --demo                # offline self-check
 
-Stdlib only.
+Stdlib only; imports the shared seolib core — see CONTEXT.md / ADR 0001.
 """
 import json
 import sys
+
+from seolib import fetch, ld
 
 CONTEXT = "https://schema.org"
 
@@ -112,6 +115,27 @@ def report(obj):
     return issues
 
 
+def lint_page(html):
+    """Offline core: extract JSON-LD from a page, split into all nodes and the
+    ones this linter recognises. The half that used to be missing."""
+    nodes = ld.extract(html)
+    known = [n for n in nodes if n.get("@type") in SPEC]
+    return nodes, known
+
+
+def report_page(url, *, fetcher=fetch):
+    html = fetcher(url).body
+    nodes, known = lint_page(html)
+    print(f"\n  JSON-LD on {url}: {len(nodes)} node(s), {len(known)} lintable.")
+    if not known:
+        print(f"  (no {'/'.join(SPEC)} JSON-LD found to lint.)\n")
+        return []
+    issues = []
+    for n in known:
+        issues += report(n)
+    return issues
+
+
 def emit(type_name):
     obj = SAMPLES[type_name]
     blob = json.dumps(obj, indent=2, ensure_ascii=False)
@@ -143,5 +167,7 @@ if __name__ == "__main__":
     elif len(args) == 2 and args[0] == "lint":
         with open(args[1], encoding="utf-8") as f:
             report(json.load(f))
+    elif len(args) == 2 and args[0] == "page":
+        report_page(args[1])
     else:
         sys.exit(__doc__)

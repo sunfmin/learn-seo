@@ -23,46 +23,17 @@ Usage:
     python3 eeat_audit.py page.html --base https://site.com/blog/post
     python3 eeat_audit.py --demo      # offline self-check, no network
 """
-import json
 import sys
 
-from seolib import domain, fetch, parse
-
-ARTICLE = {"article", "blogposting", "newsarticle", "techarticle", "scholarlyarticle"}
-
-
-def flatten_ld(blocks):
-    """Every dict node across all JSON-LD blocks (handles @graph + nesting)."""
-    out = []
-
-    def walk(o):
-        if isinstance(o, dict):
-            out.append(o)
-            for v in o.values():
-                walk(v)
-        elif isinstance(o, list):
-            for v in o:
-                walk(v)
-
-    for b in blocks:
-        try:
-            walk(json.loads(b))
-        except Exception:
-            pass
-    return out
-
-
-def _types(node):
-    t = node.get("@type")
-    return [t.lower()] if isinstance(t, str) else [str(x).lower() for x in (t or [])]
+from seolib import domain, fetch, ld, parse
 
 
 def analyze(html, base_url=None):
     """Return (facts dict, list of (letter, label, ok, detail) rows)."""
     pg = parse(html)
-    nodes = flatten_ld(pg.ld_blocks)
-    arts = [n for n in nodes if ARTICLE & set(_types(n))]
-    persons = [n for n in nodes if "person" in _types(n)]
+    nodes = ld.flatten(pg.ld_blocks)
+    arts = [n for n in nodes if ld.ARTICLE_TYPES & set(ld.types(n))]
+    persons = [n for n in nodes if "person" in ld.types(n)]
 
     def art_has(key):
         return any(a.get(key) for a in arts)
