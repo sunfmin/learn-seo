@@ -27,35 +27,23 @@ Usage:
     python3 citation_share.py results.json --domain myseo.io [--domain ...]
     python3 citation_share.py --demo
 
-Stdlib only.
+Stdlib only; imports the shared seolib core (domain) — see CONTEXT.md / ADR 0001.
 """
 import json
 import re
 import sys
 from collections import Counter
-from urllib.parse import urlparse
+
+from seolib import domain
 
 URL_RE = re.compile(r"https?://[^\s<>\"')\]]+")
-
-
-def domain_of(url):
-    """Registrable-ish domain: netloc, lowercased, leading www. dropped.
-
-    ponytail: no public-suffix list, so foo.co.uk normalises to co.uk.
-    Fine for hostname-style brand domains; add `publicsuffix2` if you track
-    sites on shared suffixes (github.io, etc.).
-    """
-    host = urlparse(url).netloc.lower()
-    if host.startswith("www."):
-        host = host[4:]
-    return host
 
 
 def cited_domains(entry):
     """Distinct domains cited in one prompt's result (from links only)."""
     urls = list(entry.get("citations", []))
     urls += URL_RE.findall(entry.get("response", ""))
-    return {domain_of(u) for u in urls if domain_of(u)}
+    return {domain(u) for u in urls if domain(u)}
 
 
 def score(entries, my_domains):
