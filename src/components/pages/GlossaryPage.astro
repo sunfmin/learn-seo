@@ -1,12 +1,32 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { groups } from '../../i18n/glossary';
-import { type Lang, localizePath } from '../../i18n/ui';
+import { type Lang, htmlLang, localizePath } from '../../i18n/ui';
 
 interface Props { lang?: Lang }
 const { lang = 'en' } = Astro.props;
 const en = lang === 'en';
 const canonical = new URL(localizePath('/reference/glossary.html', lang), Astro.site).href;
+
+// Dogfooding Lesson 0003: a glossary IS a schema.org DefinedTermSet. Strip the
+// inline HTML from each definition for the machine-readable description.
+const strip = (s: string) => s.replace(/<[^>]+>/g, '');
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTermSet',
+  '@id': canonical,
+  url: canonical,
+  name: en ? 'Glossary — SEO / AEO for Builders' : '术语表 — 面向开发者的 SEO / AEO',
+  inLanguage: htmlLang[lang],
+  hasDefinedTerm: groups.flatMap((g) =>
+    g.terms.map((term) => ({
+      '@type': 'DefinedTerm',
+      name: term.t[lang],
+      description: strip(term.d[lang]),
+      inDefinedTermSet: canonical,
+    })),
+  ),
+};
 ---
 <BaseLayout
   lang={lang}
@@ -15,6 +35,7 @@ const canonical = new URL(localizePath('/reference/glossary.html', lang), Astro.
     ? 'Shared vocabulary for SEO, AEO, and the automation built on top — tagged SEO (classic search), AEO (AI answer engines), or BOTH.'
     : 'SEO、AEO 及其上自动化的共享词汇——标注 SEO（经典搜索）、AEO（AI 答案引擎）或 BOTH（两者）。'}
   canonical={canonical}
+  jsonld={jsonld}
 >
   <div class="wrap">
     <p class="kicker">{en ? 'Reference · adhere to these definitions in every lesson' : '参考 · 每节课都遵循这些定义'}</p>

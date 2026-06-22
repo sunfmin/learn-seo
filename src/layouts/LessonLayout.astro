@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Quiz from '../components/lesson/Quiz.astro';
-import { type Lang, useTranslations, localizePath } from '../i18n/ui';
+import { type Lang, htmlLang, useTranslations, localizePath } from '../i18n/ui';
 
 // Renders a lesson: the site shell (via BaseLayout) + a narrow reading column,
 // with the structured tail — quiz, primary source, ask box, pager, footnotes —
@@ -30,12 +30,32 @@ const pageTitle =
     ? `第 ${data.num} 课 · ${data.title}`
     : `Lesson ${data.num} · ${data.title}`;
 const minutes = ps.minutes ? ` (≈${ps.minutes} ${t('lesson.primary.min')})` : '';
+
+// Dogfooding Lesson 0003: every lesson page emits structured data — a
+// LearningResource that's part of the Course, with the primary source as a
+// citation (the machine-readable E-E-A-T sourcing signal from 0008).
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'LearningResource',
+  '@id': canonical,
+  url: canonical,
+  name: pageTitle,
+  description: data.blurb,
+  inLanguage: htmlLang[lang],
+  learningResourceType: 'lesson',
+  educationalLevel: 'beginner',
+  position: Number(data.num),
+  isPartOf: { '@type': 'Course', name: 'SEO & AEO for builders' },
+  publisher: { '@type': 'Organization', name: 'learn-seo' },
+  citation: ps.url,
+};
 ---
 <BaseLayout
   title={pageTitle}
   description={data.blurb}
   lang={lang}
   canonical={canonical}
+  jsonld={jsonld}
 >
   <article class="wrap lesson">
     <p class="kicker">{data.kicker}</p>

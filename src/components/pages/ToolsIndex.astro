@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { tools, lessonsFor, slugFor } from '../../data/lessons';
-import { type Lang, localizePath } from '../../i18n/ui';
+import { type Lang, htmlLang, localizePath } from '../../i18n/ui';
 
 interface Props { lang?: Lang }
 const { lang = 'en' } = Astro.props;
@@ -13,6 +13,24 @@ const slugForLesson = (num: string) => {
   const e = lessonEntries.find((l) => l.data.num === num);
   return e ? slugFor(e) : '';
 };
+
+// Dogfooding Lesson 0003: the toolkit as an ItemList of SoftwareSourceCode.
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  inLanguage: htmlLang[lang],
+  itemListElement: tools.map((t, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    item: {
+      '@type': 'SoftwareSourceCode',
+      name: t.name,
+      description: t.desc[lang],
+      programmingLanguage: 'Python',
+      codeRepository: 'https://github.com/sunfmin/learn-seo',
+    },
+  })),
+};
 ---
 <BaseLayout
   lang={lang}
@@ -20,6 +38,7 @@ const slugForLesson = (num: string) => {
   description={en
     ? 'Eight stdlib-only Python tools, one per lesson: crawl audit, JSON-LD linter, GEO linter, citation tracker, render-gap diff, sitemap/IndexNow, E-E-A-T audit.'
     : '八个仅用标准库的 Python 工具，每课一个：crawl 审查、JSON-LD linter、GEO linter、citation 追踪、render-gap 对比、sitemap/IndexNow、E-E-A-T 审查。'}
+  jsonld={jsonld}
 >
   <div class="wrap wide">
     <p class="kicker">{en ? `The toolkit · ${tools.length} scripts` : `工具箱 · ${tools.length} 个脚本`}</p>
