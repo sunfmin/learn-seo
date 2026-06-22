@@ -1,0 +1,141 @@
+---
+num: '0004'
+title: Writing for Retrieval
+kicker: Lesson 0004 · Retrieve + Generate stages
+sub: >-
+  The unit an answer engine cites is a self-contained <em>passage</em>, not a
+  page. So shape the passage — and there's a measured playbook for which edits
+  actually work.
+blurb: >-
+  Answer-first, self-contained chunks an engine can lift verbatim — the inverted
+  pyramid as an AEO tactic.
+quizHeading: Shape for the engine
+quiz:
+  - q: What is the unit an answer engine actually retrieves and cites?
+    options:
+      - a self-contained passage
+      - your entire domain
+      - 'the <title> tag only'
+      - the XML sitemap
+    correct: 0
+    ok: Right — the passage is the retrieval unit, so shape the passage.
+    no: Engines chunk the web — they retrieve and cite a passage, not a domain.
+  - q: In the GEO study, which edits raised generative-engine visibility most?
+    options:
+      - repeating the target keyword more
+      - hiding extra text with CSS
+      - adding statistics, quotations, and citations
+      - buying more backlinks
+    correct: 2
+    ok: Correct — sources, quotes, and stats were the measured top edits.
+    no: Stuffing/hiding/backlinks weren't the lift; sources, quotes, stats were.
+  - q: What did keyword stuffing do in that study?
+    options:
+      - it didn't help — and tended to hurt
+      - it was the top-performing edit
+      - it's mandatory for AI Mode
+      - it replaces JSON-LD
+    correct: 0
+    ok: Yes — the study found stuffing unhelpful, often harmful.
+    no: Stuffing didn't help (and hurt) — it's the anti-pattern, not the win.
+  - q: Why lead a section with a short, direct answer (inverted pyramid)?
+    options:
+      - it raises your domain authority
+      - it gives the engine a quotable, self-contained chunk
+      - it bypasses the crawl gate
+      - it forces Google to show a rich result
+    correct: 1
+    ok: Correct — a short lead answer is a quotable, self-contained chunk.
+    no: It's about extractability — a standalone, quotable chunk, not authority.
+primarySource:
+  url: https://arxiv.org/abs/2311.09735
+  label: '"GEO: Generative Engine Optimization" — Aggarwal et al. (arXiv:2311.09735, KDD 2024)'
+  minutes: 15
+  note: >-
+    Read the abstract + the methods table — it's where the three signals and the
+    ~40% number come from, and the neutral baseline beneath the vendor noise.
+    Pair with Google's <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">"Optimizing
+    for generative AI features"</a> (the "it's still SEO" doc).
+footnotes:
+  - 'Aggarwal et al., <a href="https://arxiv.org/abs/2311.09735">"GEO: Generative Engine Optimization" (arXiv:2311.09735)</a> — cite-sources / quotations / statistics measured as top edits.'
+  - 'Google Search Central, <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">"Optimizing for generative AI features"</a> (AEO is still SEO; no special markup).'
+  - 'Google, <a href="https://developers.google.com/search/docs/appearance/ai-features">"AI features and your website."</a>'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Runbox from '../../components/lesson/Runbox.astro';
+import TwoCol from '../../components/lesson/TwoCol.astro';
+
+<p class="recap">Recap from <a href="/lessons/0003-structured-data.html">Lesson 0003</a>: <a href="/lessons/0002-crawlable-vs-indexable.html">0002</a> got the page through the crawl + index gates; 0003 labelled its facts with JSON-LD. Both make a page <em>eligible</em>. Today is about the prose itself — making it the thing an AI answer engine lifts and credits.</p>
+
+<p class="lede">An answer engine doesn't "read your page" and rank it. It chunks the web into passages, embeds them, <b>retrieves</b> the few most relevant, and <b>synthesizes</b> one answer — citing the passages it used.<sup>[1]</sup> So your real unit of optimization is the <b>passage</b>: a chunk that answers a question completely, on its own, in liftable form.</p>
+
+<Callout variant="win" lead="Your win:">run `geo_lint.py` on any draft and get a 6-signal scorecard — statistics, sources, quotations, answer-first, chunking, no keyword-stuffing — each one an edit the research says moves citation visibility.</Callout>
+
+## Same facts, two shapes
+
+The information is identical. Only the <em>shape</em> differs — and only one is easy to retrieve and quote in isolation.
+
+<TwoCol
+  cols={[
+    {
+      h: 'Wall of prose — hard to lift',
+      body: `<p>There are many things to consider with indexing and a lot of people get confused about it, and honestly crawling is also part of the picture, so when you think about whether your page shows up you have to think holistically about all of these interacting factors over time…</p><span class="lift">No standalone answer. An engine can't quote a sentence here without the whole rambling context.</span>`,
+    },
+    {
+      h: 'Answer-first chunk — liftable',
+      tag: 'aeo',
+      body: `<p><b>Is crawlable the same as indexable?</b> No — they're two separate gates. <em>Crawlable</em> means a bot may fetch the page; <em>indexable</em> means the engine keeps it.</p><p>Per Google, blocking a URL in <code>robots.txt</code> doesn't remove it from the index — the bot never reads the <code>noindex</code>.</p><span class="lift">A complete answer in two sentences, sourced. Cite-ready as-is.</span>`,
+    },
+  ]}
+/>
+
+## What actually moves citation — the measured playbook
+
+The [GEO paper](https://arxiv.org/abs/2311.09735) (Aggarwal et al., KDD 2024) A/B-tested content edits against generative engines on a benchmark of real queries. Three edits stood out, with up to ~<b>40%</b> relative visibility lift.<sup>[1]</sup> They're not stylistic — they make a passage more <em>quotable</em>.
+
+| Edit | Why it works | Measured |
+|------|--------------|----------|
+| **Cite sources** | A sourced claim is safer for the engine to repeat and attribute. | _top tier_ |
+| **Add quotations** | A verbatim quote from an authority is a ready-made liftable unit. | _top tier_ |
+| **Add statistics** | A concrete number is more citable than a vague adjective. | _top tier_ |
+| Keyword stuffing | The old SEO reflex. The study found it **didn't help** — and tended to hurt. | negative |
+
+Layer extractability on top: <b>answer-first</b> (lead with the answer, then expand — the inverted pyramid), and <b>chunked</b> (headed, self-contained sections an engine can retrieve one at a time). The `FAQPage` markup from 0003 is this principle made structural — each Q&A pair is a pre-chunked answer.
+
+<Callout variant="gotcha" lead="It's still SEO, not a magic file.">Google is on record: optimizing for AI features is the same work as good SEO — be crawlable, indexable, helpful, sourced. There is <u>no</u> special `llms.txt` or AI-only markup that buys you citations.<sup>[2]</sup> Retrieval shape is <em>additive</em> to lessons 0002–0003, not a replacement. A beautifully-shaped passage on a `noindex` page still gets cited zero times.</Callout>
+
+## The skill: lint a draft before you publish
+
+You have `tools/geo_lint.py` in this workspace. Stdlib only. It scores text/markdown against the three GEO signals plus answer-first, chunking, and a stuffing check — turning "is this written for retrieval?" into a fast, repeatable loop you can drop into a publishing pipeline.
+
+```python
+# the three evidence-backed signals, as code
+pcts  = re.findall(r"\d+%", text)              # STATISTICS
+links = re.findall(r"https?://\S+", text)      # CITE SOURCES
+quote = re.findall(r'"[^"]{15,}"', text)       # QUOTATIONS
+# + answer-first (short lead block) + chunked (headings) + anti-stuffing
+```
+
+<Callout variant="do" lead="Do this now —">
+feel the contrast:
+
+1. Self-check (offline): `python3 tools/geo_lint.py --demo`
+2. Lint a real draft of yours: `python3 tools/geo_lint.py your-draft.md`
+3. **Fix one WARN** — add a statistic with its source, or split a wall paragraph into a headed answer-first chunk — and re-run. Watch the score climb. That edit loop *is* the lesson.
+</Callout>
+
+<Runbox
+  cmd="python3 tools/geo_lint.py weak-draft.md"
+  heading="GEO / retrieval-readiness lint"
+  rows={[
+    { mark: 'WARN', label: 'STATISTICS    few/no numbers — add concrete stats' },
+    { mark: 'WARN', label: 'CITE SOURCES  thin sourcing — back claims with references' },
+    { mark: 'WARN', label: 'QUOTATIONS    no quotations — a verbatim quote is highly liftable' },
+    { mark: 'PASS', label: 'ANSWER-FIRST  opens with a 36-word answer block' },
+    { mark: 'WARN', label: 'CHUNKED       0 headings — break into self-contained chunks' },
+    { mark: 'WARN', label: "NO STUFFING   'seo' is 42% of content words (10x) — reads as stuffing" },
+  ]}
+  verdict="1/6 signals — weak — restructure before publishing."
+/>
+
+<p class="fineprint">Ceiling to know: these are <em>presence</em> heuristics, not a quality judge — a linter can confirm you cited a source, not that the source is good or the claim true. It scores shape; you still own the substance. And a high score helps citation odds, it doesn't guarantee them.</p>
