@@ -1,0 +1,143 @@
+---
+num: '0008'
+title: E-E-A-T
+kicker: Lesson 0008 · The quality signals behind every ranking
+sub: >-
+  Google's name for "is this content trustworthy?" It's not a score, not a tag,
+  not a ranking factor — and that's exactly why a builder can win here: turn the
+  fuzzy guideline into signals a machine can check.
+blurb: >-
+  Experience, Expertise, Authoritativeness, Trust. Not a score, not a ranking
+  factor — so audit the machine-detectable mix instead.
+quizHeading: Earn the trust
+quiz:
+  - q: What does Google say about E-E-A-T as a ranking factor?
+    options:
+      - it's the #1 direct ranking factor
+      - it isn't a specific ranking factor; systems use a mix of factors that identify good E-E-A-T
+      - it's a meta tag you add to the <head>
+      - it only exists for YMYL pages
+    correct: 1
+    ok: Right — not a specific ranking factor; Google approximates it with a mix of factors.
+    no: Google says E-E-A-T isn't a specific ranking factor — it uses a mix of factors that identify it.
+  - q: Which letter does Google call the most important?
+    options: [Experience, Expertise, Authoritativeness, Trust]
+    correct: 3
+    ok: Correct — trust is the centre; the other three feed it.
+    no: Google calls Trust the most important; the others contribute to it.
+  - q: How should a builder operationalize E-E-A-T?
+    options:
+      - compute a 0–100 E-E-A-T score from the page text
+      - add a <code>&lt;meta name="eeat"&gt;</code> tag
+      - audit the machine-detectable proxy signals (author, dates, publisher, sourcing)
+      - buy backlinks until it ranks
+    correct: 2
+    ok: Yes — you can't compute the score, but you can audit the detectable mix.
+    no: There's no score and no meta tag — audit the proxy signals a machine can read.
+  - q: Best machine-readable way to assert the author's authority?
+    options:
+      - a Person schema with <code>sameAs</code> linking to an authoritative profile
+      - repeat the author's name in keywords
+      - use the (nonexistent) E-E-A-T JSON-LD type
+      - hide the author to protect privacy
+    correct: 0
+    ok: Correct — Person.sameAs to a real, authoritative profile is the machine-readable way.
+    no: Authority is asserted via Person.sameAs to a real profile (and earned off-page), not keywords.
+primarySource:
+  url: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+  label: '"Creating Helpful, Reliable, People-First Content" — Google Search Central'
+  minutes: 15
+  note: >-
+    Google's own E-E-A-T explainer: the definition, "trust is most important," and
+    the "not a specific ranking factor / mix of factors" line. Go deeper with the
+    <a href="https://services.google.com/fh/files/misc/hsw-sqrg.pdf">Search Quality
+    Rater Guidelines (PDF)</a> for E-E-A-T + YMYL, and the GEO sourcing finding in
+    <a href="https://arxiv.org/abs/2311.09735">arXiv:2311.09735</a>.
+footnotes:
+  - 'Google, <a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content">"Creating Helpful, Reliable, People-First Content"</a> — E-E-A-T definition; "trust is most important"; E-E-A-T itself isn''t a specific ranking factor, but a mix of factors that identify it is useful.'
+  - 'Google, <a href="https://services.google.com/fh/files/misc/hsw-sqrg.pdf">Search Quality Rater Guidelines (PDF)</a> — E-E-A-T + YMYL; a rater framework, not an algorithm score.'
+  - 'Aggarwal et al., <a href="https://arxiv.org/abs/2311.09735">GEO (arXiv:2311.09735)</a> — citing sources / quotations / statistics lifts AI-answer visibility.'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Runbox from '../../components/lesson/Runbox.astro';
+import Letters from '../../components/lesson/Letters.astro';
+
+<p class="recap">Recap from <a href="/lessons/0007-sitemaps-and-indexnow.html">Lesson 0007</a>: that got your page <em>found</em>. But found ≠ believed. Every prior lesson made the page eligible and discoverable; this one is about whether engines (and AI answer engines) have any reason to <em>trust</em> what it says.</p>
+
+<p class="lede">E-E-A-T = <b>Experience, Expertise, Authoritativeness, Trust</b> — the framework Google's quality raters use to judge content. Google is blunt about its centre: <em>"Of these aspects, trust is most important. The others contribute to trust."</em><sup>[1]</sup> And about the trap most people fall into next.</p>
+
+## The myth, and the builder's opening
+
+There is no "E-E-A-T score," no E-E-A-T meta tag, and it is <b>not a direct ranking factor</b>. Straight from Google:
+
+> "While E-E-A-T itself isn't a specific ranking factor, using a mix of factors that can identify content with good E-E-A-T is useful."<sup>[1]</sup>
+
+Read that as a spec. Google's systems approximate E-E-A-T with a <em>mix of factors</em> — and many of those factors are concrete, machine-readable things on your page. You can't compute the score, but you <b>can</b> audit the mix. That's the tool.
+
+<Callout variant="win" lead="Your win:">run `eeat_audit.py` on a page and get a checklist of the detectable trust signals — byline, author's linked identity, publish/updated dates, publisher, outbound sourcing, transparency links — grouped by the E-E-A-T letter each supports. Explicitly <em>not</em> a score; a gap-finder.</Callout>
+
+## Four letters, one centre
+
+<Letters
+  letters={[
+    { L: 'E', t: 'Experience', d: 'First-hand: did the author actually use/visit/do the thing?' },
+    { L: 'E', t: 'Expertise', d: 'Skill/knowledge of the author on the topic.' },
+    { L: 'A', t: 'Authoritativeness', d: 'Is the author/site a known go-to source? (Largely off-page.)' },
+    { L: 'T', t: 'Trust ★', d: 'Accurate, honest, safe. The centre — the others feed it.<sup>[1]</sup>', center: true },
+  ]}
+/>
+
+The higher the stakes, the higher the bar: Google holds <b>YMYL</b> pages — "Your Money or Your Life," anything affecting health, finances, safety, or societal well-being — to far stricter E-E-A-T.<sup>[2]</sup>
+
+## From fuzzy guideline → detectable signal
+
+This is the whole builder move: each abstract quality maps to something in your HTML or JSON-LD that a crawler can confirm in milliseconds.
+
+| Quality | Machine-detectable proxy | Lives in |
+|---------|--------------------------|----------|
+| <span class="badge c">E·E</span> authorship | named author + author entity | `meta[author]`, `rel=author`, Article `author` |
+| <span class="badge c">A</span> authority | author identity linked off-site | `Person.sameAs` → real profile |
+| <span class="badge c">A</span> publisher | org behind the content | Article `publisher` |
+| <span class="badge c">T</span> transparency | publish + updated dates | `datePublished`, `dateModified` |
+| <span class="badge c">T</span> accountability | about / contact reachable | site nav / footer links |
+| <span class="badge c">T</span> sourcing | cites outside references | outbound `<a>` to sources |
+
+That last row is also an <span class="tag aeo">AEO</span> lever: the GEO research found that adding citations, quotations, and statistics measurably lifts how often AI engines cite a page.<sup>[3]</sup> Trust signals and AI-citation signals are the same signals.
+
+## The tool: audit the mix
+
+```python
+# NOT a score. Each row is one factor in Google's "mix" — present or missing.
+author_named  = meta[author] or rel=author or Article.author
+author_linked = Person.sameAs -> an authoritative profile     # authority
+trust = datePublished & dateModified & publisher
+      & cites_outbound_sources & about/contact & https      # the centre
+```
+
+<Callout variant="do" lead="Do this now:">
+
+1. Self-check (offline): `python3 tools/eeat_audit.py --demo`
+2. Audit a real article (yours or a competitor's): `python3 tools/eeat_audit.py https://site.com/blog/post`
+3. Fix one <u>MISS</u> with the highest leverage — usually `author` + `sameAs` + `dateModified` in your Article JSON-LD (you already have the schema tool from <a href="/lessons/0003-structured-data.html">Lesson 0003</a>).
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/eeat_audit.py https://thin-blog.example/post"
+  heading="E-E-A-T proxy-signal audit (not a score — the detectable factors)"
+  rows={[
+    { mark: 'FAIL', label: 'E·E · named author (byline / meta / schema)' },
+    { mark: 'FAIL', label: 'E·E · author detailed in Article schema' },
+    { mark: 'FAIL', label: 'A · author identity linked off-site (sameAs)' },
+    { mark: 'FAIL', label: 'A · publisher declared in schema' },
+    { mark: 'FAIL', label: 'T · served over HTTPS' },
+    { mark: 'FAIL', label: 'T · publish date present (datePublished)' },
+    { mark: 'PASS', label: 'T · cites outbound sources (2 external links)' },
+    { mark: 'FAIL', label: 'T · transparency link (about / contact)' },
+  ]}
+  verdict="1/9 trust signals present. Anonymous / thin — engines have little to trust."
+/>
+
+<Callout variant="gotcha" lead="You can't mark your way to authority.">These signals are <em>necessary, not sufficient</em>. A `sameAs` pointing at a profile that doesn't establish any real expertise fools no one — Authoritativeness is mostly earned <em>off</em> your page (who links to and cites the author). The audit finds the <em>missing</em> markup so engines can <em>read</em> the trust you've actually built; it can't manufacture trust you haven't. And on YMYL topics, faking it is actively risky.<sup>[2]</sup> Add the signals because they're true, then make them machine-readable.</Callout>
+
+<p class="fineprint">Ceiling to know: `eeat_audit.py` checks <em>presence</em> of signals, not their quality — it confirms an author is named, not that the author is genuinely expert. It's a completeness gate on the parts a machine can verify, deliberately silent on the parts only a human rater can judge.</p>

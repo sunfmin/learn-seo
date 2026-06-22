@@ -1,0 +1,33 @@
+---
+// The four E-E-A-T letter cards (Lesson 0008). A small flex grid of big-letter
+// cards; the "centre" card (Trust) gets the gold highlight. Inline HTML allowed
+// in the description (e.g. a footnote <sup>). One-off layout, scoped styles.
+interface Letter {
+  L: string; // the big letter (E / A / T)
+  t: string; // the term
+  d: string; // short description (inline HTML allowed)
+  center?: boolean; // the highlighted centre card (Trust)
+}
+interface Props {
+  letters: Letter[];
+}
+const { letters } = Astro.props;
+---
+<div class="letters">
+  {letters.map((l) => (
+    <div class:list={['letter', { trust: l.center }]}>
+      <div class="bigL">{l.L}</div>
+      <div class="term">{l.t}</div>
+      <div class="desc" set:html={l.d} />
+    </div>
+  ))}
+</div>
+<style>
+  .letters { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.4rem 0; }
+  .letter { flex: 1 1 9rem; border: 1px solid var(--rule); border-radius: 0.5rem; background: #fff; padding: 0.7rem 0.85rem; }
+  .bigL { font-size: 1.5rem; font-weight: 700; color: var(--seo); line-height: 1; }
+  .term { font-weight: 600; margin: 0.2rem 0 0.15rem; font-size: 0.95rem; }
+  .desc { font-size: 0.82rem; color: #555; line-height: 1.45; }
+  .letter.trust { border-color: #bfa06a; background: #fbf3e6; }
+  .letter.trust .bigL { color: #b07a1e; }
+</style>
