@@ -27,6 +27,9 @@ jobs:
       # and uploads dist/ as the Pages artifact.
       - uses: withastro/action@v3
         with:
+          # pnpm 11 (what @latest resolves to) needs Node 22 — on the runner's
+          # default Node 20 it crashes with ERR_UNKNOWN_BUILTIN_MODULE.
+          node-version: 22
           package-manager: pnpm@latest
 
   deploy:
