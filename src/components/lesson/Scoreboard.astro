@@ -1,0 +1,41 @@
+---
+// Dark terminal box for a stats scoreboard (Lesson 0005's citation_share.py):
+// two headline metrics, a ranked domain tally, per-prompt HIT/miss rows. Distinct
+// from Runbox (a PASS/FAIL checklist) — different output shape, its own component.
+interface Metric { label: string; value: string; note: string; }
+interface DomainRow { count: number; domain: string; you?: boolean; }
+interface PromptRow { hit: boolean; text: string; }
+interface Props {
+  cmd: string;
+  heading: string;
+  metrics: Metric[];
+  domains: DomainRow[];
+  prompts: PromptRow[];
+}
+const { cmd, heading, metrics, domains, prompts } = Astro.props;
+const rule = '─'.repeat(52);
+const NL = '\n';
+---
+<pre class="scoreboard"><span class="cmd">$ {cmd}</span>{NL}{NL}{heading}{NL}{rule}{metrics.map((m) => (<Fragment>{NL}<span class="metric">{m.label}</span>  <span class="val">{m.value}</span>  <span class="note">{m.note}</span></Fragment>))}{NL}{rule}{NL}Top cited domains:{domains.map((d) => (<Fragment>{NL}  {String(d.count)}  {d.domain}{d.you && <span class="you">  ← you</span>}</Fragment>))}{NL}{rule}{NL}Per prompt:{prompts.map((p) => (<Fragment>{NL}  <span class={p.hit ? 'hit' : 'miss'}>{p.hit ? '[HIT ]' : '[miss]'}</span> {p.text}</Fragment>))}</pre>
+<style>
+  .scoreboard {
+    background: #101418;
+    color: #cfe8d4;
+    padding: 0.9rem 1.1rem;
+    border-radius: 0.5rem;
+    font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    white-space: pre;
+    overflow: auto;
+    margin: 1rem 0;
+  }
+  .cmd { color: #f0d98a; }
+  .metric { color: #cfe8d4; font-weight: 600; }
+  .val { color: #7fd99a; font-weight: 600; }
+  .note { color: #9a9486; }
+  .hit { color: #7fd99a; }
+  .miss { color: #9a9486; }
+  .you { color: #e9c46a; }
+  @media print { .scoreboard { background: #f3efe6; color: #222; } }
+</style>

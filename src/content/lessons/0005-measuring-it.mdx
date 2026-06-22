@@ -1,0 +1,157 @@
+---
+num: '0005'
+title: Measuring It
+kicker: Lesson 0005 · Did it work?
+sub: >-
+  Two scoreboards, wildly asymmetric. Classic search hands you a first-party
+  API. AI citations hand you nothing — so you build the proxy everyone else
+  builds.
+blurb: >-
+  Two scoreboards: Search Console gives ground truth via API; AI citations have
+  none, so you build the proxy everyone builds.
+quizHeading: Read the scoreboard
+quiz:
+  - q: Which has a first-party measurement API you can call today?
+    options:
+      - classic search (Google Search Console)
+      - AI-answer citations
+      - both, equally
+      - neither
+    correct: 0
+    ok: Right — Search Console is real first-party data you can query.
+    no: Classic search has Search Console; AI citations have no API yet.
+  - q: How does every AEO citation tracker get its numbers?
+    options:
+      - a first-party engine citation API
+      - running a prompt library and parsing the responses
+      - reading the site's robots.txt
+      - the Search Console API
+    correct: 1
+    ok: Correct — prompt library in, parse the cited domains out.
+    no: There's no first-party citation API — trackers all sample via prompts.
+  - q: Why not compare your share-of-voice across two different AEO tools?
+    options:
+      - they ran different prompt sets — not comparable
+      - one tool is always simply wrong
+      - share of voice isn't a real metric
+      - Google forbids the comparison
+    correct: 0
+    ok: Yes — different prompt sets, so absolute numbers don't compare.
+    no: Both can be 'right' on their own prompts; the prompt sets differ.
+  - q: What does the Search Console API give you that an AEO proxy can't?
+    options:
+      - real impressions/clicks/position from Google's own logs
+      - your exact ChatGPT citation count
+      - a guaranteed #1 ranking
+      - competitor API keys
+    correct: 0
+    ok: Correct — impressions/clicks/position from Google's own logs.
+    no: It's Google's logged search data — not AI citations or rankings.
+primarySource:
+  url: https://developers.google.com/webmaster-tools/v1/searchanalytics/query
+  label: '"Search Analytics: query" — Search Console API reference'
+  minutes: 12
+  note: >-
+    The exact request body and the rows you get back — your classic-search
+    ground-truth feed. Start at the <a href="https://developers.google.com/webmaster-tools/about">API
+    overview</a>. For the AEO side, see the proxy-method walkthrough in <a href="https://ahrefs.com/blog/chatgpt-visibility-tracking/">Ahrefs'
+    ChatGPT-visibility guide</a> and the gaps note in <a href="/resources/"><code>RESOURCES.md</code></a>.
+footnotes:
+  - 'RESOURCES.md "Gaps" — no first-party AEO API; trackers use proxy sampling.'
+  - 'Google, <a href="https://developers.google.com/webmaster-tools/v1/searchanalytics/query">Search Console API — Search Analytics query.</a>'
+  - 'Google, <a href="https://developers.google.com/search/blog/2026/06/gen-ai-performance-reports">"Gen-AI performance reports in Search Console"</a> (UI report, not yet API).'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import TwoCol from '../../components/lesson/TwoCol.astro';
+import Scoreboard from '../../components/lesson/Scoreboard.astro';
+
+<p class="recap">Recap from <a href="/lessons/0004-writing-for-retrieval.html">Lesson 0004</a>: you made a page eligible (<a href="/lessons/0002-crawlable-vs-indexable.html">0002</a>), labelled its facts (<a href="/lessons/0003-structured-data.html">0003</a>), and shaped its prose for retrieval (0004). All of that is a bet. This lesson closes the loop — how do you <em>know</em> it landed?</p>
+
+<p class="lede">The two pipelines don't measure the same way, and the gap is the whole story. For classic search, Google gives you <b>ground truth</b> through an API. For AI-answer citations, <b>no engine exposes one</b> — so every tracker on the market, and the one you'll build, is a <em>proxy</em>.<sup>[1]</sup></p>
+
+<Callout variant="win" lead="Your win:">run `citation_share.py` on a set of answer-engine responses and get your <em>coverage</em> (% of prompts that cite you) and <em>share of voice</em> (your slice of all citations) vs competitors — the same proxy metric Profound and Ahrefs Brand Radar sell.</Callout>
+
+## Two scoreboards
+
+<TwoCol
+  cols={[
+    {
+      h: 'Classic search — first-party API',
+      tag: 'seo',
+      body: `<p><b>Google Search Console API.</b> Real impressions, clicks, average position, and the exact queries — from Google's own logs.<sup>[2]</sup></p><p>The <code>Web</code> search type now folds in traffic from AI features, so AI-Overview clicks already show up here.</p><p><em>✓ ground truth, queryable, free</em></p>`,
+    },
+    {
+      h: 'AI citations — no API exists',
+      tag: 'aeo',
+      body: `<p>No OpenAI / Anthropic / Perplexity / Google endpoint answers "how often is my site cited?" Google's June 2026 gen-AI reports are a Console <em>UI</em> view, not in the API yet.<sup>[3]</sup></p><p>So you sample: run a prompt library, parse the citations, tally.</p><p><em>✗ proxy only — synthetic, not real traffic</em></p>`,
+    },
+  ]}
+/>
+
+## Classic side: just call the API
+
+This one's a solved problem — authenticate, then `POST` a date range and the dimensions you want. No tool to build; the platform is the tool.
+
+```http
+# Search Console: top queries by clicks, last 28 days
+POST https://www.googleapis.com/webmasters/v3/sites/{siteUrl}/searchAnalytics/query
+{
+  "startDate": "2026-05-20", "endDate": "2026-06-17",
+  "dimensions": ["query"],
+  "rowLimit": 100
+}
+# -> rows of { keys:[query], clicks, impressions, ctr, position }
+```
+
+Poll it on a schedule, store the rows, and you have rank/impression/click trends over time — the backbone of any SEO monitor.
+
+## AEO side: the proxy you build
+
+Because there's no ground truth, every commercial AEO tracker does the same three steps — and so does `tools/citation_share.py`:
+
+| Step | What it is | Who owns it |
+|------|-----------|-------------|
+| 1 · Prompt library | A fixed set of buyer questions in your space | you (the API key + prompts) |
+| 2 · Run the engine | Send each prompt, capture response + cited links | you (one API call) |
+| 3 · Parse & score | Extract cited domains → coverage + share of voice | `citation_share.py` |
+
+A second helper, `tools/build_prompts.py`, owns step 1: it assembles that buyer-question prompt library — from an LLM fan-out or your Search Console rows — in the exact shape `citation_share.py` consumes. The tool is the offline, testable core. It scores <em>cited links</em> (the AEO equivalent of a rank), not bare brand mentions:
+
+```python
+# coverage = prompts that cite me; SOV = my citations / all citations
+cited = cited_domains(entry)          # links in response + citations[]
+hit   = bool(cited & my_domains)
+sov   = mine / total_citations
+```
+
+<Callout variant="do" lead="Do this now:">
+
+1. Self-check (offline): `python3 tools/citation_share.py --demo`
+2. Hand-make a tiny `results.json` — 3–4 buyer questions, paste in real answers + links from ChatGPT/Perplexity — then score it: `python3 tools/citation_share.py results.json --domain yourdomain.com`
+3. **Re-run it next week.** The single number that matters is your <em>own coverage trend</em> — not the absolute value.
+
+</Callout>
+
+<Scoreboard
+  cmd="python3 tools/citation_share.py results.json --domain myseo.io"
+  heading="AI-citation share — 4 prompts, you = myseo.io"
+  metrics={[
+    { label: 'COVERAGE', value: '50%', note: 'cited in 2/4 prompts' },
+    { label: 'SHARE OF VOICE', value: '33%', note: 'of all citations are yours' },
+  ]}
+  domains={[
+    { count: 3, domain: 'ahrefs.com' },
+    { count: 2, domain: 'myseo.io', you: true },
+    { count: 1, domain: 'moz.com' },
+  ]}
+  prompts={[
+    { hit: true, text: 'best seo audit tool for developers?' },
+    { hit: false, text: 'how to track rankings via api?' },
+    { hit: true, text: 'what is generative engine optimization?' },
+    { hit: false, text: 'cheapest backlink checker?' },
+  ]}
+/>
+
+<Callout variant="gotcha" lead="Proxy ≠ ground truth — read your own numbers honestly.">Your prompt library is a sample <em>you</em> chose, not the engine's real query distribution, and answers are non-deterministic. So absolute share-of-voice means little, and two tools' numbers aren't comparable — they ran different prompts.<sup>[1]</sup> Treat it like a poll: a fixed prompt set re-run over time gives a trustworthy <em>trend</em>; a single run's headline % does not. Hold the prompts constant or you're measuring your prompts, not your site.</Callout>
+
+<p class="fineprint">Ceiling to know: `citation_share.py` counts cited <em>links</em> only. "Brand mentioned without a link" is a different (softer) metric; domain matching is naive (no public-suffix list). Both are noted in the tool's docstring as upgrade paths.</p>
