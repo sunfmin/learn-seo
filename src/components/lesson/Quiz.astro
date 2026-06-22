@@ -1,0 +1,101 @@
+---
+// The retrieval-practice quiz. One engine, fed by a single-sourced questions
+// array from lesson frontmatter (answer key + feedback in one place — ADR 0002,
+// replacing the old data-correct attr + fbOk/fbNo JS arrays + inline strings).
+interface QuizQ {
+  q: string;
+  options: string[];
+  correct: number;
+  ok: string;
+  no: string;
+}
+interface Props {
+  questions: QuizQ[];
+  heading?: string;
+}
+const { questions, heading = 'Check what stuck' } = Astro.props;
+---
+<section class="quiz">
+  <p class="qk">Retrieval practice · no peeking</p>
+  <h2>{heading}</h2>
+  <p class="qintro">
+    Answer from memory — that effort is what makes it stick. One try each; pick
+    before you read the others.
+  </p>
+  {questions.map((qq, qi) => (
+    <div class="q" data-correct={qq.correct}>
+      <div class="qnum">Question {qi + 1} / {questions.length}</div>
+      <div class="qtext" set:html={qq.q} />
+      <div class="opts">
+        {qq.options.map((o) => <button class="opt" type="button" set:html={o} />)}
+      </div>
+      <div class="fb"></div>
+    </div>
+  ))}
+  <div class="score"></div>
+</section>
+
+<script define:vars={{ fb: questions.map((q) => ({ ok: q.ok, no: q.no })) }}>
+  const quiz = document.querySelector('.quiz');
+  if (quiz) {
+    const qs = [...quiz.querySelectorAll('.q')];
+    const total = qs.length;
+    let answered = 0,
+      correct = 0;
+    qs.forEach((q, qi) => {
+      const opts = [...q.querySelectorAll('.opt')];
+      const fbEl = q.querySelector('.fb');
+      const right = +q.dataset.correct;
+      opts.forEach((opt, oi) =>
+        opt.addEventListener('click', () => {
+          if (q.dataset.done) return;
+          q.dataset.done = '1';
+          answered++;
+          opts.forEach((o) => (o.disabled = true));
+          opts[right].classList.add('correct');
+          if (oi === right) {
+            correct++;
+            fbEl.textContent = fb[qi].ok;
+            fbEl.className = 'fb show ok';
+          } else {
+            opt.classList.add('wrong');
+            fbEl.textContent = fb[qi].no;
+            fbEl.className = 'fb show no';
+          }
+          if (answered === total) {
+            quiz.querySelector('.score').textContent =
+              `Score: ${correct} / ${total} — ` +
+              (correct === total
+                ? 'perfect — on to the next lesson.'
+                : 'review the section above, then ask your teacher about any miss.');
+          }
+        }),
+      );
+    });
+  }
+</script>
+
+<style>
+  .quiz { margin: 2.2rem 0 0; border-top: 2px solid var(--rule); padding-top: 1.4rem; }
+  .qk { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--seo); font-weight: 600; margin: 0; }
+  .quiz h2 { margin-top: 0.4rem; }
+  .qintro { font-size: 0.93rem; color: var(--muted); margin-top: 0; }
+  .q { margin: 1.6rem 0; padding: 1rem 1.1rem; border: 1px solid var(--rule); border-radius: 0.5rem; background: #fff; }
+  .qnum { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .qtext { font-weight: 600; margin: 0.3rem 0 0.8rem; font-size: 1.02rem; }
+  .opts { display: flex; flex-direction: column; gap: 0.45rem; }
+  .opt { display: block; text-align: left; font: inherit; font-size: 0.96rem; background: #fbfaf6; border: 1px solid var(--rule); border-radius: 0.4rem; padding: 0.55rem 0.7rem; cursor: pointer; transition: 0.12s; }
+  .opt:hover { border-color: #c9bfa8; background: #f6f2e8; }
+  .opt.correct { background: #e8f3ea; border-color: var(--good); color: var(--good); font-weight: 600; }
+  .opt.wrong { background: #f7e9e7; border-color: var(--bad); color: var(--bad); }
+  .opt:disabled { cursor: default; }
+  .fb { margin-top: 0.6rem; font-size: 0.9rem; display: none; }
+  .fb.show { display: block; }
+  .fb.ok { color: var(--good); }
+  .fb.no { color: var(--bad); }
+  .score { margin-top: 1.4rem; font-size: 1.05rem; font-weight: 600; min-height: 1.5rem; }
+  @media print {
+    .opt { cursor: default; }
+    .quiz { break-inside: avoid; }
+  }
+</style>

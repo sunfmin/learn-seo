@@ -5,7 +5,7 @@
 // them there and rewrite the few repo-relative links (../RESOURCES.md,
 // ../MISSION.md, ../lessons/) onto the site's real routes. public/lessons/
 // and public/reference/ are GENERATED — gitignored, never hand-edited.
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,6 +16,12 @@ const linkRewrites = (html) =>
     .replaceAll('../RESOURCES.md', '/resources/')
     .replaceAll('../MISSION.md', '/');
 
+// Clear-then-rebuild so a lesson migrated to an MDX collection entry (ADR 0002)
+// leaves NO stale public/ copy — otherwise it would collide with the Astro route
+// that now owns that URL. Lessons migrate one at a time; this shrinks to nothing
+// once all originals are gone (Slice 9 deletes this script entirely).
+rmSync(join(root, 'public/lessons'), { recursive: true, force: true });
+rmSync(join(root, 'public/reference'), { recursive: true, force: true });
 mkdirSync(join(root, 'public/lessons'), { recursive: true });
 mkdirSync(join(root, 'public/reference'), { recursive: true });
 

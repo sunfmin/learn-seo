@@ -1,0 +1,25 @@
+---
+import { getCollection, render } from 'astro:content';
+import LessonLayout from '../../layouts/LessonLayout.astro';
+import { lessons as lessonMeta } from '../../data/lessons';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('lessons');
+  // slug carries `.html` so the URL stays /lessons/<id>.html (ADR 0002).
+  return entries.map((entry) => ({ params: { slug: `${entry.id}.html` }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+// Next-lesson pager, derived from the canonical ordered list (lessons.ts during
+// migration; switches to the collection in Slice 9). build.format:'file' makes
+// this route emit /lessons/<slug>.html, preserving the existing URLs.
+const ordered = [...lessonMeta].sort((a, b) => a.num.localeCompare(b.num));
+const i = ordered.findIndex((l) => l.num === entry.data.num);
+const next = i >= 0 && i + 1 < ordered.length ? ordered[i + 1] : null;
+const canonical = new URL(`/lessons/${entry.id}.html`, Astro.site).href;
+---
+<LessonLayout data={entry.data} next={next} canonical={canonical}>
+  <Content />
+</LessonLayout>

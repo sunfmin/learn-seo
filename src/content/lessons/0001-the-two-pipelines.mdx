@@ -1,0 +1,102 @@
+---
+num: '0001'
+title: The Two Pipelines
+kicker: Lesson 0001 · Foundations
+sub: Before any tactic makes sense, you need the machine it feeds. There are two of them.
+blurb: >-
+  Classic search (crawl → index → rank) vs AI answer engines (retrieve → generate →
+  cite). The mental model the whole course hangs on.
+quizHeading: Place the tactic on the pipeline
+quiz:
+  - q: In classic search, which stage decides the <em>order</em> results appear in?
+    options: [Crawl, Index, Rank, Serve]
+    correct: 2
+    ok: Right. Ranking is the ordering step.
+    no: Ranking orders the indexed pages for a query.
+  - q: An AI answer engine mostly draws its answer from…
+    options:
+      - already crawled and indexed pages
+      - a separate private fact database
+      - the model's frozen training weights
+      - paid placements from advertising partners
+    correct: 0
+    ok: Yes — engines ground answers in the live indexed web.
+    no: Engines retrieve from the crawled & indexed web (often via a live search).
+  - q: For AEO, why does getting <em>indexed</em> still matter?
+    options:
+      - engines retrieve from the indexed web
+      - indexing directly edits the model weights
+      - classic ranking is now fully obsolete
+      - crawlers skip pages lacking structured data
+    correct: 0
+    ok: Correct — retrieval reads the index, so indexing is table stakes.
+    no: Retrieval reads the indexed web — no index, no retrieval.
+  - q: Your tool validates <code>robots.txt</code> and <code>sitemap.xml</code>. Which stage is it serving?
+    options: [Crawl, Index, Rank, Cite]
+    correct: 0
+    ok: Correct — robots.txt & sitemaps are crawl-stage controls.
+    no: Those files tell the crawler what to fetch — the Crawl stage.
+primarySource:
+  url: https://developers.google.com/search/docs/fundamentals/how-search-works
+  label: '“In-depth guide to how Google Search works” — Google Search Central'
+  minutes: 15
+  note: >-
+    The crawl → index → serve pipeline straight from the engine's own docs. The
+    highest-trust source there is for Pipeline 1.
+footnotes:
+  - 'Google Search Central, “How Search Works.”'
+  - 'Aggarwal et al., “GEO: Generative Engine Optimization,” <a href="https://arxiv.org/abs/2311.09735">arXiv:2311.09735</a> (KDD 2024); and Google Search Central, <a href="https://developers.google.com/search/docs/appearance/ai-features">“AI features and your website.”</a>'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Pipeline from '../../components/lesson/Pipeline.astro';
+
+<p class="lede">You're a developer building marketing automation. So skip the tips-and-tricks framing. The only durable model is this: <b>your content flows through a pipeline of distinct stages, and every SEO/AEO tactic is just an intervention at one stage.</b> Master the stages and every tactic finds its slot.</p>
+
+<Callout variant="win" lead="Your win for this lesson:">given any SEO or AEO tactic, you can name which pipeline and which stage it targets — and therefore what your tooling must produce for it.</Callout>
+
+## Pipeline 1 — Classic search
+
+This is what "SEO" has always meant. Google (or Bing) runs four stages, in order. A page that fails an early stage never reaches the later ones — you cannot rank a page that was never indexed, and you cannot index a page that was never crawled.<sup>[1]</sup>
+
+<Pipeline
+  variant="seo"
+  label="Classic search · SEO"
+  stages={[
+    { name: 'Crawl', do: 'bot fetches your pages' },
+    { name: 'Index', do: 'parse + store in the database' },
+    { name: 'Rank', do: 'order pages for a query' },
+    { name: 'Serve', do: 'render the results page' },
+  ]}
+/>
+
+## Pipeline 2 — AI answer engines
+
+This is "AEO" (a.k.a. GEO). ChatGPT, Claude, Perplexity, and Google's AI Overviews don't hand you ten links — they compose one answer and <em>cite</em> a few sources. The stages are different: <b>retrieve</b> candidate passages, <b>synthesize</b> an answer, <b>cite</b> the sources used.<sup>[2]</sup>
+
+<Pipeline
+  variant="aeo"
+  label="AI answer engine · AEO / GEO"
+  stages={[
+    { name: 'Retrieve', do: 'pull passages, often via live search' },
+    { name: 'Synthesize', do: 'LLM writes one answer' },
+    { name: 'Cite', do: 'attribute the sources used' },
+  ]}
+  feeds="▲ Retrieval usually reads from the <b>same crawled &amp; indexed web</b> as Pipeline 1."
+/>
+
+<Callout variant="insight" lead="The key connection:">AEO does not replace SEO — it sits on top of it. Most answer engines retrieve from the indexed web (frequently by running a search query under the hood). So being crawlable and indexable is <em>table stakes for both</em>. AEO then adds a new question: once retrieved, is your page easy to extract a clean, quotable, citable fact from?</Callout>
+
+## Why a builder cares: each stage is a thing your software touches
+
+The reason this model is worth memorizing: every stage maps to a concrete artifact your automation will read or write.
+
+| Stage | What your tooling does here |
+|-------|------------------------------|
+| **Crawl** | Generate/validate `robots.txt` & `sitemap.xml`; check pages return 200 and aren't blocked. |
+| **Index** | Render pages headless; verify titles, canonicals, and that content is in the HTML, not hidden behind JS. |
+| **Rank** | Audit content depth, internal links, page speed; track keyword positions via an API. |
+| **Serve** | Emit `schema.org` structured data so you win rich results & snippets. |
+| **Retrieve** | Make facts extractable: clear headings, self-contained sentences, structured data. |
+| **Cite** | Track which AI engines cite you, for which prompts, over time. |
+
+Future lessons drill into one cell at a time. Today you only need the map.

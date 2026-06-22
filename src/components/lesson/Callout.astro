@@ -1,0 +1,30 @@
+---
+// The prose callout — one component, variant drives colour + bold lead-in.
+// Replaces the per-lesson .win / .insight / .gotcha boxes (ADR 0002).
+interface Props {
+  variant?: 'win' | 'insight' | 'gotcha' | 'note';
+  /** bold lead-in rendered before the body (e.g. "Your win for this lesson:") */
+  lead?: string;
+}
+const { variant = 'note', lead } = Astro.props;
+---
+<div class:list={['callout', variant]}>
+  {lead && <b class="lead">{lead}</b>}{lead ? ' ' : ''}<slot />
+</div>
+<style>
+  .callout {
+    border: 1px solid var(--rule);
+    border-radius: 0.4rem;
+    padding: 0.9rem 1.1rem;
+    margin: 1.4rem 0;
+    font-size: 0.97rem;
+  }
+  .lead { font-weight: 600; }
+  .win { background: #fbf6ea; border-left: 3px solid var(--seo); }
+  .win .lead { color: var(--seo); }
+  .insight { background: var(--aeobg); border-left: 3px solid var(--aeo); }
+  .insight .lead { color: var(--aeo); }
+  .gotcha { background: #f7ece9; border-left: 3px solid var(--bad); }
+  .gotcha .lead { color: var(--bad); }
+  .note { background: #f3f1ea; border-left: 3px solid var(--muted); }
+</style>

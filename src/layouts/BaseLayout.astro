@@ -8,10 +8,12 @@ interface Props {
   wrapClass?: string;
   /** optional JSON-LD object injected into <head> (dogfooding Lesson 0003) */
   jsonld?: Record<string, unknown>;
+  /** override the derived canonical (lessons emit their .html URL) */
+  canonical?: string;
 }
 
-const { title, description, jsonld } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const { title, description, jsonld, canonical: canonicalProp } = Astro.props;
+const canonical = canonicalProp ?? new URL(Astro.url.pathname, Astro.site).href;
 const nav = [
   { href: '/', label: 'Home' },
   { href: '/lessons/', label: 'Lessons' },
