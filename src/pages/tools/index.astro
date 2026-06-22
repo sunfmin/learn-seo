@@ -1,6 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { tools, slugForLesson } from '../../data/lessons';
+import { getCollection } from 'astro:content';
+import { tools } from '../../data/lessons';
+
+// lesson num -> /lessons/<slug>.html, from the content collection (single source).
+const lessonEntries = await getCollection('lessons');
+const slugForLesson = (num: string) => {
+  const e = lessonEntries.find((l) => l.data.num === num);
+  return e ? `${e.id}.html` : '';
+};
 ---
 <BaseLayout
   title="Tools — SEO & AEO for builders"

@@ -1,12 +1,7 @@
-// Single source of truth for lesson + tool metadata. The lesson bodies live as
-// self-contained HTML in public/lessons/ (their quizzes + scoped CSS are
-// pristine — served verbatim). The tools live in tools/ (see CONTEXT.md / ADR 0001).
-export interface Lesson {
-  num: string;
-  slug: string; // file in public/lessons/
-  title: string;
-  blurb: string;
-}
+// Lesson metadata now lives in each lesson's MDX frontmatter (the `lessons`
+// content collection — see src/content.config.ts and ADR 0002). What remains here
+// is the tool catalogue and the lesson↔tool mapping the tools/lessons hub pages use.
+import { getCollection } from 'astro:content';
 
 export interface Tool {
   name: string;
@@ -14,65 +9,6 @@ export interface Tool {
   desc: string;
   run: string;
 }
-
-export const lessons: Lesson[] = [
-  {
-    num: '0001',
-    slug: '0001-the-two-pipelines.html',
-    title: 'The Two Pipelines',
-    blurb:
-      'Classic search (crawl → index → rank) vs AI answer engines (retrieve → generate → cite). The mental model the whole course hangs on.',
-  },
-  {
-    num: '0002',
-    slug: '0002-crawlable-vs-indexable.html',
-    title: 'Crawlable vs Indexable',
-    blurb:
-      'The two gates a page passes before it can ever rank — and why one is robots.txt and the other is noindex/title/canonical.',
-  },
-  {
-    num: '0003',
-    slug: '0003-structured-data.html',
-    title: 'Structured Data',
-    blurb:
-      'JSON-LD that earns rich results and feeds machines your facts. Required vs recommended properties, validated.',
-  },
-  {
-    num: '0004',
-    slug: '0004-writing-for-retrieval.html',
-    title: 'Writing for Retrieval',
-    blurb:
-      'Answer-first, self-contained chunks an engine can lift verbatim — the inverted pyramid as an AEO tactic.',
-  },
-  {
-    num: '0005',
-    slug: '0005-measuring-it.html',
-    title: 'Measuring It',
-    blurb:
-      'Two scoreboards: Search Console gives ground truth via API; AI citations have none, so you build the proxy everyone builds.',
-  },
-  {
-    num: '0006',
-    slug: '0006-the-js-rendering-gap.html',
-    title: 'The JS-Rendering Gap',
-    blurb:
-      "Google's deferred two-wave render, and why your urllib crawler — and most AI crawlers — only ever see the raw, pre-JS HTML.",
-  },
-  {
-    num: '0007',
-    slug: '0007-sitemaps-and-indexnow.html',
-    title: 'Sitemaps + IndexNow',
-    blurb:
-      'Passive discovery (a sitemap every engine pulls) vs active push (IndexNow — instant, shared, and ignored by Google).',
-  },
-  {
-    num: '0008',
-    slug: '0008-eeat.html',
-    title: 'E-E-A-T',
-    blurb:
-      'Experience, Expertise, Authoritativeness, Trust. Not a score, not a ranking factor — so audit the machine-detectable mix instead.',
-  },
-];
 
 export const tools: Tool[] = [
   { name: 'crawl_audit.py', lesson: '0002',
@@ -106,7 +42,11 @@ export function toolsForLesson(num: string): Tool[] {
   return tools.filter((t) => t.lesson === num);
 }
 
-/** The public/lessons slug for a lesson number (so a tool can link to its lesson). */
-export function slugForLesson(num: string): string {
-  return lessons.find((l) => l.num === num)?.slug ?? '';
+/**
+ * The /lessons/ slug (`NNNN-*.html`) for a lesson number, read from the content
+ * collection. Async because the collection is the single source of truth now.
+ */
+export async function slugForLesson(num: string): Promise<string> {
+  const entry = (await getCollection('lessons')).find((l) => l.data.num === num);
+  return entry ? `${entry.id}.html` : '';
 }

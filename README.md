@@ -12,7 +12,7 @@ canonical / Open Graph / JSON-LD on every hub page (0003, 0008).
 
 ```bash
 pnpm install
-pnpm dev        # local dev server (auto-syncs lesson pages first)
+pnpm dev        # local dev server
 pnpm build      # static build to dist/ (+ sitemap.xml)
 pnpm preview    # serve the built site
 ```
@@ -24,18 +24,20 @@ URLs and the sitemap derive from it.
 
 | Path | What |
 |------|------|
-| `src/pages/` | Astro hub pages: home, lessons index, `tools/`, `resources/` |
-| `src/layouts/`, `src/styles/` | shared layout + the design system the lessons use |
-| `src/data/lessons.ts` | single source of truth for lesson metadata |
-| `lessons/*.html` | the authored lesson pages (self-contained: scoped CSS + quiz) |
-| `reference/glossary.html` | the glossary |
+| `src/pages/` | Astro hub pages: home, lessons index, `tools/`, `resources/`, glossary |
+| `src/content/lessons/*.mdx` | the authored lessons — MDX + typed frontmatter (the `lessons` collection); see `src/content.config.ts` |
+| `src/layouts/` | `BaseLayout` (site shell) + `LessonLayout` |
+| `src/components/lesson/` | the shared lesson components (Quiz, Callout, Runbox, TwoCol, …) |
+| `src/styles/global.css` | the one design system |
+| `src/data/lessons.ts` | the tool catalogue + lesson↔tool mapping (lesson metadata now lives in frontmatter) |
 | `RESOURCES.md` | every primary source the lessons cite — rendered at `/resources/` |
 | `MISSION.md` | why this course exists |
 | `tools/*.py` | one audit/automation script per lesson (each has `--demo`) |
-| `scripts/sync-lessons.mjs` | prebuild step: copies lessons → `public/`, rewrites links |
 
-`public/lessons/` and `public/reference/` are **generated** by the sync step
-(gitignored). Edit the originals in `lessons/` and `reference/`, never the copies.
+Lessons are authored as MDX in `src/content/lessons/`; their metadata, quiz, primary
+source, and footnotes live in frontmatter, and `LessonLayout` renders the rest (ADR 0002).
+Editing a lesson means editing its `.mdx` and the shared components — there's no longer a
+self-contained HTML file or a sync step.
 
 ## The tools
 

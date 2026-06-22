@@ -1,6 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { lessons, toolsForLesson } from '../../data/lessons';
+import { getCollection } from 'astro:content';
+import { toolsForLesson } from '../../data/lessons';
+
+const lessons = (await getCollection('lessons')).sort((a, b) =>
+  a.data.num.localeCompare(b.data.num),
+);
 ---
 <BaseLayout
   title="Lessons — SEO & AEO for builders"
@@ -11,8 +16,8 @@ import { lessons, toolsForLesson } from '../../data/lessons';
     itemListElement: lessons.map((l, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      name: `Lesson ${l.num}: ${l.title}`,
-      url: `${Astro.site}lessons/${l.slug}`,
+      name: `Lesson ${l.data.num}: ${l.data.title}`,
+      url: `${Astro.site}lessons/${l.id}.html`,
     })),
   }}
 >
@@ -23,12 +28,12 @@ import { lessons, toolsForLesson } from '../../data/lessons';
 
     <div class="grid">
       {lessons.map((l) => (
-        <a class="card" href={`/lessons/${l.slug}`}>
-          <span class="num">Lesson {l.num}</span>
-          <span class="ct">{l.title}</span>
-          <span class="cd">{l.blurb}</span>
-          {toolsForLesson(l.num).length > 0 && (
-            <span class="tool">▸ {toolsForLesson(l.num).map((t) => t.name).join(' · ')}</span>
+        <a class="card" href={`/lessons/${l.id}.html`}>
+          <span class="num">Lesson {l.data.num}</span>
+          <span class="ct">{l.data.title}</span>
+          <span class="cd">{l.data.blurb}</span>
+          {toolsForLesson(l.data.num).length > 0 && (
+            <span class="tool">▸ {toolsForLesson(l.data.num).map((t) => t.name).join(' · ')}</span>
           )}
         </a>
       ))}

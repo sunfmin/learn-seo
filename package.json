@@ -5,9 +5,6 @@
   "private": true,
   "description": "SEO/AEO for builders — a hands-on course, built as a textbook-perfect Astro SEO site.",
   "scripts": {
-    "sync": "node scripts/sync-lessons.mjs",
-    "predev": "node scripts/sync-lessons.mjs",
-    "prebuild": "node scripts/sync-lessons.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
