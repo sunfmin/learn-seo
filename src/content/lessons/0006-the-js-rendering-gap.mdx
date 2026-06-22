@@ -1,0 +1,152 @@
+---
+num: '0006'
+title: The JS-Rendering Gap
+kicker: Lesson 0006 · What your crawler misses
+sub: >-
+  Your page has two versions: the HTML the server sends, and the DOM after
+  JavaScript runs. Half the bots only ever see the first one — and they decide
+  whether you exist.
+blurb: >-
+  Google's deferred two-wave render, and why your urllib crawler — and most AI
+  crawlers — only ever see the raw, pre-JS HTML.
+quizHeading: Mind the gap
+quiz:
+  - q: In Google's pipeline, when does your JavaScript actually run?
+    options:
+      - never — Google ignores JS entirely
+      - during the crawl, in the same request
+      - later, in a separate deferred render queue
+      - only if you submit a sitemap
+    correct: 2
+    ok: Right — render is a separate, deferred queue, not part of the crawl.
+    no: Google does run JS — but later, in a deferred render queue after the crawl.
+  - q: Why can <code>crawl_audit.py</code> print PASS on a page with no visible content?
+    options:
+      - it checks rankings, not content
+      - it fetches raw HTML with urllib and never runs JS
+      - robots.txt hid the content from it
+      - the page used SSR
+    correct: 1
+    ok: Correct — it's a urllib fetch of the raw HTML; no JS ever runs.
+    no: It fetches raw HTML with urllib and never executes JavaScript.
+  - q: Why is client-side rendering worse for AEO than for classic SEO?
+    options:
+      - many standalone AI crawlers don't run JS, so they see the empty shell
+      - AI engines penalize React sites on purpose
+      - JSON-LD is banned in AI answers
+      - it isn't — both handle it identically
+    correct: 0
+    ok: Yes — no-JS AI crawlers see the empty shell, while Googlebot eventually renders.
+    no: Standalone AI crawlers commonly skip JS, so CSR content is missing for AEO.
+  - q: A signal jumps from 0 (raw) to many (rendered). What does <code>render_gap.py</code> call it, and what's the fix?
+    options:
+      - a rich result — submit it to Search Console
+      - a canonical conflict — pick one URL
+      - a robots block — edit robots.txt
+      - JS-dependent — move that content into the server's HTML response
+    correct: 3
+    ok: Correct — JS-dependent; the fix is to put it in the server's HTML (SSR/SSG).
+    no: It's flagged JS-DEP; move that content into the server-rendered HTML.
+primarySource:
+  url: https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
+  label: '"Understand the JavaScript SEO basics" — Google Search Central'
+  minutes: 10
+  note: >-
+    The three phases (crawl → render → index) and why render is a deferred queue,
+    from the engine itself. Pair it with the rendering note in <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">"How
+    Search Works"</a>, and the AI-crawler-control gap in <a href="/resources/"><code>RESOURCES.md</code></a>.
+footnotes:
+  - 'Google, <a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics">"Understand the JavaScript SEO basics"</a> — crawl / render / index phases; render is a deferred queue.'
+  - 'Google, <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">"In-depth guide to how Google Search works"</a> — renders + runs JS "using a recent version of Chrome."'
+  - 'RESOURCES.md "Gaps" — no stable spec for AI-crawler controls; trackers/crawlers commonly fetch raw HTML.'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Pipeline from '../../components/lesson/Pipeline.astro';
+import Runbox from '../../components/lesson/Runbox.astro';
+import TwoCol from '../../components/lesson/TwoCol.astro';
+
+<p class="recap">Recap from <a href="/lessons/0002-crawlable-vs-indexable.html">Lesson 0002</a>: you ran `crawl_audit.py` and it said "crawlable + indexable." But that tool fetches with `urllib` — it reads the <em>raw</em> response and never runs a line of JS. So does the page it blessed actually <em>contain</em> anything? This lesson finds the gap.</p>
+
+<p class="lede">Google doesn't index your page in one shot. It crawls the <b>raw HTML</b> first, then — separately, later, when its resources allow — a headless Chrome <b>renders</b> the page, runs the JavaScript, and re-indexes whatever the JS produced.<sup>[1]</sup> Rendering is a <em>deferred queue</em>, not part of the crawl. If your content only exists after JS, it's invisible until that second wave — and to many bots, invisible forever.</p>
+
+<Callout variant="win" lead="Your win:">run `render_gap.py` on a page's <em>raw</em> HTML vs its <em>rendered</em> DOM and get a per-signal diff — words, links, JSON-LD, headings — flagging exactly which ones exist <b>only after JavaScript</b>. That's the content a no-JS bot never sees and Google sees late.</Callout>
+
+## Two waves, not one
+
+Straight from Google's JavaScript-SEO doc: pages are processed in phases, and rendering sits in its own queue.<sup>[1]</sup>
+
+<Pipeline
+  variant="seo"
+  label="Google's pipeline · two waves"
+  stages={[
+    { name: 'Crawl', do: 'wave 1 — fetch raw HTML, index it. No JS yet.' },
+    { name: 'Render', do: 'deferred queue — headless Chrome runs the JS when resources allow' },
+    { name: 'Re-index', do: 'wave 2 — JS-produced content, links + schema get indexed, if render succeeded' },
+  ]}
+  feeds="▲ Render is its own <b>deferred queue</b> — it can take seconds, or much longer."
+/>
+
+<p>Google <em>does</em> run your JavaScript "using a recent version of Chrome, similar to how your browser renders pages."<sup>[2]</sup> The catch is <em>when</em>, and <em>who else doesn't</em>.</p>
+
+## Your audit tool is a no-JS bot — and so are most AI crawlers
+
+`crawl_audit.py` from 0002 is exactly the kind of fetcher that sees wave-1 only:
+
+```python
+# crawl_audit.py — the fetch is plain HTTP. No browser, no JS.
+req = urllib.request.Request(url, headers={"User-Agent": "Googlebot"})
+body = urllib.request.urlopen(req).read()   # <- raw HTML only
+```
+
+<p>So if your `<title>`, content, and canonical are injected by React after load, `crawl_audit.py` can't see them — and it might still print PASS off a near-empty shell. The same blind spot hits the AEO side hard: standalone AI crawlers commonly fetch raw HTML and <b>don't execute JavaScript</b>, and there's no settled standard for controlling them.<sup>[3]</sup> Client-side content that Googlebot eventually renders may never reach an answer engine at all.</p>
+
+<TwoCol
+  cols={[
+    {
+      h: 'Server-rendered (SSR / SSG) — content in the first byte',
+      tag: 'seo',
+      body: `<p>The HTML response already holds the text, links, and JSON-LD. JS only enhances.</p><p>Seen by wave-1 Googlebot, no-JS AI crawlers, your own audit — <em>everyone</em>, immediately.</p><span class="tagline good">✓ indexed now · citable now</span>`,
+    },
+    {
+      h: 'Client-rendered (CSR) — empty shell + bundle',
+      tag: 'aeo',
+      body: `<p>Raw HTML is <code>&lt;div id="root"&gt;&lt;/div&gt;</code>. All content arrives via JS.</p><p>Invisible to no-JS bots; Googlebot indexes it only on the deferred render wave — if it renders cleanly.</p><span class="tagline bad">✗ delayed for Google · missing for AEO</span>`,
+    },
+  ]}
+/>
+
+## The tool: diff the two versions
+
+<p>You give `render_gap.py` two things — the <em>raw</em> HTML (it can fetch this, like 0002's tool) and the <em>rendered</em> DOM (you capture it: DevTools → Elements → right-click `<html>` → <em>Copy outerHTML</em>). It extracts the same signals from each and flags any that jump from ≈0 to a lot:</p>
+
+```python
+# share of each signal present WITHOUT JS
+visible = raw[key] / rendered[key]          # 1.0 = fully server-rendered
+js_dep  = rendered[key] > 0 and visible < 0.5   # needs JS to exist
+# headline keys on visible TEXT: >=90% server-rendered, <=10% client-rendered
+```
+
+<Callout variant="do" lead="Do this now:">
+
+1. Self-check (offline): `python3 tools/render_gap.py --demo`
+2. Pick a page. Save its rendered DOM as `rendered.html` (DevTools → Copy outerHTML), then: `python3 tools/render_gap.py https://yoursite.com/page rendered.html`
+3. Test a <b>known SPA</b> (a React/Vue app route) the same way — watch every signal flag <b>JS-DEP</b>. That's what a no-JS crawler sees.
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/render_gap.py https://app.example.com/blog/geo rendered.html"
+  heading="Render gap — raw HTML (no JS)  vs  rendered DOM (after JS)"
+  rows={[
+    { mark: 'FAIL', label: 'visible words      no JS 0 · with JS 209 · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'a links            no JS 0 · with JS 3   · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'JSON-LD blocks     no JS 0 · with JS 1   · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'h1 headings        no JS 0 · with JS 1   · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'h2 headings        no JS 0 · with JS 1   · visible 0% · JS-DEP' },
+  ]}
+  verdict="CLIENT-SIDE RENDERED — the raw HTML is an empty shell. No-JS AI crawlers see ~nothing; Googlebot indexes it only on the deferred render wave."
+/>
+
+<Callout variant="gotcha" lead="The JSON-LD trap: your perfect schema from 0003 can be invisible.">If you inject structured data through Google Tag Manager or client-side JS, it lives <em>only</em> in the rendered DOM — so `schema_tool.py` validates it, Googlebot may pick it up on wave 2, but a no-JS AI crawler never sees a single property.<sup>[3]</sup> Same story for client-rendered `<title>` and canonical: `crawl_audit.py` can wave a page through while the raw response is an empty shell. <b>Passing the crawl/index gate ≠ the content is actually there.</b> Put facts in the HTML the server sends.</Callout>
+
+<p class="fineprint">Ceiling to know: `render_gap.py` doesn't run a browser — you supply the rendered DOM, the same way 0005's tracker takes engine output you captured. Its "visible words" counts text nodes, not layout; a fully JS-built page that Google renders fine will still flag here, and that's the point — it shows the <em>no-JS</em> view, which is one real audience, not a verdict on Googlebot.</p>
