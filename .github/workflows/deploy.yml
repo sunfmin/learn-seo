@@ -1,0 +1,40 @@
+name: Deploy to GitHub Pages
+
+# Build the Astro site and publish it to GitHub Pages on every push to master.
+# Serves at the custom domain learn-seo.sunfmin.com (see public/CNAME).
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Least-privilege token the Pages deploy needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; let a newer push supersede an in-flight run.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # withastro/action detects pnpm from pnpm-lock.yaml, installs, builds,
+      # and uploads dist/ as the Pages artifact.
+      - uses: withastro/action@v3
+        with:
+          package-manager: pnpm@latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

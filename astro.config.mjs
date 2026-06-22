@@ -7,7 +7,7 @@ import mdx from '@astrojs/mdx';
 // Every page — lessons (MDX collection), the glossary, and the hub pages — is now
 // a real Astro page, so @astrojs/sitemap discovers them all; no customPages hack
 // (ADR 0002). Change `site` to your real production origin before deploying.
-const SITE = 'https://learn-seo.example';
+const SITE = 'https://learn-seo.sunfmin.com';
 
 export default defineConfig({
   site: SITE,
