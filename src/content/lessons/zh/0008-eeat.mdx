@@ -1,0 +1,142 @@
+---
+num: '0008'
+title: E-E-A-T
+kicker: 第 0008 课 · 每一次排名背后的质量信号
+sub: >-
+  这是 Google 对"这内容值得信任吗?"的命名。它不是分数、不是标签、也不是排名因子（ranking
+  factor）——而这恰恰是开发者能在这里取胜的原因:把模糊的指南变成机器可以检查的信号。
+blurb: >-
+  Experience、Expertise、Authoritativeness、Trust。不是分数、不是排名因子(ranking
+  factor)——所以改去审计那些机器可检测的信号组合。
+quizHeading: 赢得信任
+quiz:
+  - q: 关于 E-E-A-T 作为排名因子(ranking factor),Google 是怎么说的?
+    options:
+      - 它是排名第一的直接排名因子
+      - 它不是某个具体的排名因子;Google 系统使用一组能识别出良好 E-E-A-T 的因子组合
+      - 它是你添加到 <head> 里的一个 meta 标签
+      - 它只对 YMYL 页面存在
+    correct: 1
+    ok: 对——它不是某个具体的排名因子;Google 用一组因子的组合来近似它。
+    no: Google 说 E-E-A-T 不是某个具体的排名因子——它使用一组能识别出 E-E-A-T 的因子组合。
+  - q: Google 把哪个字母称为最重要的?
+    options: [Experience, Expertise, Authoritativeness, Trust]
+    correct: 3
+    ok: 正确——Trust 是核心;其他三个都在为它服务。
+    no: Google 把 Trust 称为最重要的;其他几个都在为它做贡献。
+  - q: 开发者应该如何把 E-E-A-T 落地?
+    options:
+      - 从页面文本计算出一个 0–100 的 E-E-A-T 分数
+      - 添加一个 <code>&lt;meta name="eeat"&gt;</code> 标签
+      - 审计机器可检测的代理信号(proxy)(作者、日期、发布者、对外引用)
+      - 买反向链接直到它排上去
+    correct: 2
+    ok: 是的——你无法计算分数,但你可以审计那些可检测的信号组合。
+    no: 没有分数也没有 meta 标签——审计那些机器能读到的代理信号(proxy)。
+  - q: 用机器可读的方式声明作者权威性,最好的办法是?
+    options:
+      - 一个 Person schema,用 <code>sameAs</code> 链接到一个权威的个人资料
+      - 在关键词里重复作者的名字
+      - 使用(根本不存在的)E-E-A-T JSON-LD 类型
+      - 隐藏作者以保护隐私
+    correct: 0
+    ok: 正确——用 Person.sameAs 链接到一个真实、权威的个人资料,就是机器可读的做法。
+    no: 权威性通过 Person.sameAs 链接到真实资料来声明(且在页面之外赢得),而不是靠关键词。
+primarySource:
+  url: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+  label: '"Creating Helpful, Reliable, People-First Content" — Google Search Central'
+  minutes: 15
+  note: >-
+    Google 自己的 E-E-A-T 说明:定义、"trust is most important",以及"not a specific ranking
+    factor / mix of factors"那句话。想深入,可看
+    <a href="https://services.google.com/fh/files/misc/hsw-sqrg.pdf">Search Quality
+    Rater Guidelines (PDF)</a> 了解 E-E-A-T + YMYL,以及
+    <a href="https://arxiv.org/abs/2311.09735">arXiv:2311.09735</a> 中关于 GEO 对外引用的发现。
+footnotes:
+  - 'Google,<a href="https://developers.google.com/search/docs/fundamentals/creating-helpful-content">"Creating Helpful, Reliable, People-First Content"</a> —— E-E-A-T 的定义;"trust is most important";E-E-A-T 本身不是某个具体的排名因子,但一组能识别出它的因子组合是有用的。'
+  - 'Google,<a href="https://services.google.com/fh/files/misc/hsw-sqrg.pdf">Search Quality Rater Guidelines (PDF)</a> —— E-E-A-T + YMYL;这是一套评估员(rater)的框架,不是算法分数。'
+  - 'Aggarwal 等人,<a href="https://arxiv.org/abs/2311.09735">GEO (arXiv:2311.09735)</a> —— 引用来源 / 引述 / 统计数据能提升 AI 回答的可见度。'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import Letters from '../../../components/lesson/Letters.astro';
+
+<p class="recap">回顾 <a href="/zh/lessons/0007-sitemaps-and-indexnow.html">第 0007 课</a>:那一课让你的页面被<em>找到</em>。但被找到 ≠ 被相信。此前的每一课都让页面变得合规且可被发现;这一课要解决的是,引擎(以及 AI 回答引擎)有没有任何理由去<em>信任</em>页面上说的内容。</p>
+
+<p class="lede">E-E-A-T = <b>Experience(经验)、Expertise(专业)、Authoritativeness(权威)、Trust(信任)</b> —— 这是 Google 的质量评估员(quality rater)用来判断内容的框架。Google 对它的核心说得很直白:<em>"Of these aspects, trust is most important. The others contribute to trust."</em><sup>[1]</sup>(在这些方面里,信任最重要,其余三个都在为信任做贡献。)以及紧接着大多数人会踩的那个坑。</p>
+
+## 那个误解,以及开发者的切入点
+
+不存在"E-E-A-T 分数",没有 E-E-A-T 的 meta 标签,而且它<b>不是直接的排名因子</b>。直接引用 Google 的原话:
+
+> "While E-E-A-T itself isn't a specific ranking factor, using a mix of factors that can identify content with good E-E-A-T is useful."<sup>[1]</sup>(虽然 E-E-A-T 本身不是某个具体的排名因子,但使用一组能识别出良好 E-E-A-T 内容的因子组合是有用的。)
+
+把这句话当成一份规格来读。Google 的系统用一组<em>因子的组合</em>来近似 E-E-A-T —— 而其中许多因子,就是你页面上具体的、机器可读的东西。你无法计算出分数,但你<b>可以</b>审计这个组合。这就是工具所在。
+
+<Callout variant="win" lead="你的收获:">对一个页面运行 `eeat_audit.py`,得到一份可检测信任信号的清单——署名、作者关联的身份、发布/更新日期、发布者(publisher)、对外引用(outbound sourcing)、透明度链接——按每个信号所支持的 E-E-A-T 字母分组。它明确<em>不是</em>分数;它是个找缺口的工具。</Callout>
+
+## 四个字母,一个核心
+
+<Letters
+  letters={[
+    { L: 'E', t: 'Experience', d: '第一手:作者真的用过/去过/做过这件事吗?' },
+    { L: 'E', t: 'Expertise', d: '作者在该主题上的技能/知识水平。' },
+    { L: 'A', t: 'Authoritativeness', d: '作者/网站是不是公认的首选来源?(很大程度上在页面之外。)' },
+    { L: 'T', t: 'Trust ★', d: '准确、诚实、安全。这是核心——其他三个都在为它服务。<sup>[1]</sup>', center: true },
+  ]}
+/>
+
+风险越高,门槛越高:对于 <b>YMYL</b> 页面——"Your Money or Your Life"(钱财或生命),即任何影响健康、财务、安全或社会福祉的内容——Google 会用严格得多的 E-E-A-T 标准来要求它们。<sup>[2]</sup>
+
+## 从模糊指南 → 可检测信号
+
+这就是开发者要做的全部动作:每一项抽象的质量,都映射到你 HTML 或 JSON-LD 里某个爬虫能在毫秒内确认的东西。
+
+| 质量 | 机器可检测的代理信号(proxy) | 存在于 |
+|---------|--------------------------|----------|
+| <span class="badge c">E·E</span> 作者身份 | 具名作者 + 作者实体 | `meta[author]`、`rel=author`、Article 的 `author` |
+| <span class="badge c">A</span> 权威 | 作者身份链接到站外 | `Person.sameAs` → 真实个人资料 |
+| <span class="badge c">A</span> 发布者 | 内容背后的组织 | Article 的 `publisher` |
+| <span class="badge c">T</span> 透明 | 发布 + 更新日期 | `datePublished`、`dateModified` |
+| <span class="badge c">T</span> 可追责 | about / contact 可触达 | 站点导航 / 页脚链接 |
+| <span class="badge c">T</span> 引用来源 | 引用外部参考 | 指向来源的对外 `<a>` |
+
+最后一行同时也是一个 <span class="tag aeo">AEO</span> 杠杆:GEO 研究发现,加入引用、引述和统计数据,能可衡量地提升 AI 引擎引用一个页面的频率。<sup>[3]</sup> 信任信号和 AI 引用信号,是同一批信号。
+
+## 工具:审计这个组合
+
+```python
+# NOT a score. Each row is one factor in Google's "mix" — present or missing.
+author_named  = meta[author] or rel=author or Article.author
+author_linked = Person.sameAs -> an authoritative profile     # authority
+trust = datePublished & dateModified & publisher
+      & cites_outbound_sources & about/contact & https      # the centre
+```
+
+<Callout variant="do" lead="现在就做:">
+
+1. 自检(离线):`python3 tools/eeat_audit.py --demo`
+2. 审计一篇真实文章(你自己的或竞品的):`python3 tools/eeat_audit.py https://site.com/blog/post`
+3. 修复一个杠杆最大的 <u>MISS</u>——通常是你 Article JSON-LD 里的 `author` + `sameAs` + `dateModified`(从 <a href="/zh/lessons/0003-structured-data.html">第 0003 课</a> 起你就已经有了那个 schema 工具)。
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/eeat_audit.py https://thin-blog.example/post"
+  heading="E-E-A-T proxy-signal audit (not a score — the detectable factors)"
+  rows={[
+    { mark: 'FAIL', label: 'E·E · named author (byline / meta / schema)' },
+    { mark: 'FAIL', label: 'E·E · author detailed in Article schema' },
+    { mark: 'FAIL', label: 'A · author identity linked off-site (sameAs)' },
+    { mark: 'FAIL', label: 'A · publisher declared in schema' },
+    { mark: 'FAIL', label: 'T · served over HTTPS' },
+    { mark: 'FAIL', label: 'T · publish date present (datePublished)' },
+    { mark: 'PASS', label: 'T · cites outbound sources (2 external links)' },
+    { mark: 'FAIL', label: 'T · transparency link (about / contact)' },
+  ]}
+  verdict="1/9 trust signals present. Anonymous / thin — engines have little to trust."
+/>
+
+<Callout variant="gotcha" lead="你没法靠打标记就标出权威。">这些信号是<em>必要而非充分的</em>。一个指向不能确立任何真实专业性的资料的 `sameAs`,骗不了任何人——权威性(Authoritativeness)主要是在你页面<em>之外</em>赢得的(谁链接、谁引用了这位作者)。审计工具找出<em>缺失的</em>标记,好让引擎能<em>读到</em>你真正建立起来的信任;它无法制造出你尚未拥有的信任。而在 YMYL 主题上,弄虚作假是实打实地危险。<sup>[2]</sup> 添加这些信号是因为它们真实存在,然后再让它们变得机器可读。</Callout>
+
+<p class="fineprint">要知道的天花板:`eeat_audit.py` 检查的是信号的<em>存在与否</em>,而不是它们的质量——它确认作者被署名了,而不是确认这位作者真的够专业。它是对机器能验证的那部分做完整性把关,并刻意对只有人类评估员才能判断的那部分保持沉默。</p>

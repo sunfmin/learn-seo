@@ -4,9 +4,9 @@ Vocabulary for this codebase. Use these terms exactly in code, commits, and issu
 
 ## Domain (SEO / AEO)
 
-See the glossary at `/reference/glossary.html` (authored in
-`src/pages/reference/glossary.html.astro`) for the full, lesson-grounded glossary.
-The load-bearing terms:
+See the glossary at `/reference/glossary.html` (bilingual term data in
+`src/i18n/glossary.ts`, rendered by `src/components/pages/GlossaryPage.astro`) for the
+full, lesson-grounded glossary. The load-bearing terms:
 
 - **Classic pipeline** — crawl → index → rank → serve. Measured by the Search Console API (ground truth).
 - **Answer-engine pipeline** — retrieve → generate → cite. No first-party measurement API; trackers use proxy sampling.
@@ -35,10 +35,17 @@ Each lesson tool keeps its own `--demo` offline self-check for its lesson-specif
 An Astro site (see ADR 0002). As `seolib` is the capstone the tools converge on, the
 lesson **presentation** converges on shared components. Named as concepts:
 
-- **lesson** — an MDX entry in the `lessons` content collection (`src/content/lessons/*.mdx`).
-  Its **frontmatter is the single source** for metadata, the quiz (answer key + feedback in
-  one array), the primary source, and footnotes; the MDX body is teaching prose only. URLs
-  stay `/lessons/NNNN-*.html`.
+- **lesson** — an MDX entry in the `lessons` content collection, organised by locale
+  (`src/content/lessons/<lang>/NNNN-*.mdx` — ADR 0003). Its **frontmatter is the single
+  source** for metadata, the quiz (answer key + feedback in one array), the primary source,
+  and footnotes; the MDX body is teaching prose only. URLs stay `/lessons/NNNN-*.html` (en)
+  and `/zh/lessons/NNNN-*.html` (zh).
+- **locale** — the site is bilingual (English + 简体中文, ADR 0003). English is the default
+  locale at `/`; Chinese lives under `/zh/`, linked by `hreflang`. UI chrome reads from one
+  dictionary (`src/i18n/ui.ts`); glossary terms and tool descriptions carry both languages
+  (`src/i18n/glossary.ts`, `src/data/lessons.ts`). Chinese prose keeps SEO/AEO jargon in
+  English, glossed on first use. Locale-aware lesson helpers (`lessonsFor`, `slugFor`,
+  `langOf`) live in `src/data/lessons.ts`.
 - **`LessonLayout`** — wraps `BaseLayout` (the site shell). Renders the structured tail from
   frontmatter — quiz, primary-source box, ask box, footnotes — and computes the Next pager
   from collection order. Nothing in the tail is hand-authored per lesson.

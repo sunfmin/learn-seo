@@ -9,22 +9,23 @@ interface QuizQ {
   ok: string;
   no: string;
 }
+import { type Lang, useTranslations } from '../../i18n/ui';
 interface Props {
   questions: QuizQ[];
   heading?: string;
+  lang?: Lang;
 }
-const { questions, heading = 'Check what stuck' } = Astro.props;
+const { questions, heading, lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const head = heading ?? t('quiz.heading');
 ---
 <section class="quiz">
-  <p class="qk">Retrieval practice · no peeking</p>
-  <h2>{heading}</h2>
-  <p class="qintro">
-    Answer from memory — that effort is what makes it stick. One try each; pick
-    before you read the others.
-  </p>
+  <p class="qk">{t('quiz.kicker')}</p>
+  <h2>{head}</h2>
+  <p class="qintro">{t('quiz.intro')}</p>
   {questions.map((qq, qi) => (
     <div class="q" data-correct={qq.correct}>
-      <div class="qnum">Question {qi + 1} / {questions.length}</div>
+      <div class="qnum">{t('quiz.question')} {qi + 1} {t('quiz.of')} {questions.length}</div>
       <div class="qtext" set:html={qq.q} />
       <div class="opts">
         {qq.options.map((o) => <button class="opt" type="button" set:html={o} />)}
@@ -35,7 +36,10 @@ const { questions, heading = 'Check what stuck' } = Astro.props;
   <div class="score"></div>
 </section>
 
-<script define:vars={{ fb: questions.map((q) => ({ ok: q.ok, no: q.no })) }}>
+<script define:vars={{
+  fb: questions.map((q) => ({ ok: q.ok, no: q.no })),
+  L: { score: t('quiz.score'), perfect: t('quiz.perfect'), review: t('quiz.review') },
+}}>
   const quiz = document.querySelector('.quiz');
   if (quiz) {
     const qs = [...quiz.querySelectorAll('.q')];
@@ -64,10 +68,8 @@ const { questions, heading = 'Check what stuck' } = Astro.props;
           }
           if (answered === total) {
             quiz.querySelector('.score').textContent =
-              `Score: ${correct} / ${total} — ` +
-              (correct === total
-                ? 'perfect — on to the next lesson.'
-                : 'review the section above, then ask your teacher about any miss.');
+              `${L.score} ${correct} / ${total} — ` +
+              (correct === total ? L.perfect : L.review);
           }
         }),
       );

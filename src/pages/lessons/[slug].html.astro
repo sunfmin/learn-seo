@@ -1,27 +1,16 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import LessonLayout from '../../layouts/LessonLayout.astro';
+import { lessonPaths } from '../../data/lessonRoute';
 
 export async function getStaticPaths() {
-  const entries = await getCollection('lessons');
-  // `.html` is in the route FILENAME ([slug].html.astro), so the URL stays
-  // /lessons/<id>.html in both dev and build (ADR 0002). Keeping it in the slug
-  // param instead 404s in dev — Astro reads the extension as a static asset.
-  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+  return lessonPaths('en');
 }
 
-const { entry } = Astro.props;
+const { entry, next } = Astro.props;
 const { Content } = await render(entry);
-
-// Next-lesson pager, derived from collection order (the single source of truth).
-const ordered = (await getCollection('lessons')).sort((a, b) =>
-  a.data.num.localeCompare(b.data.num),
-);
-const i = ordered.findIndex((e) => e.id === entry.id);
-const nextEntry = i >= 0 && i + 1 < ordered.length ? ordered[i + 1] : null;
-const next = nextEntry ? { slug: `${nextEntry.id}.html`, title: nextEntry.data.title } : null;
-const canonical = new URL(`/lessons/${entry.id}.html`, Astro.site).href;
+const canonical = new URL(`/lessons/${Astro.params.slug}.html`, Astro.site).href;
 ---
-<LessonLayout data={entry.data} next={next} canonical={canonical}>
+<LessonLayout data={entry.data} next={next} lang="en" canonical={canonical}>
   <Content />
 </LessonLayout>

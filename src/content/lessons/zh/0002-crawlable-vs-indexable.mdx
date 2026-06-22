@@ -1,0 +1,143 @@
+---
+num: '0002'
+title: 可抓取（crawlable）≠ 可索引（indexable）
+kicker: 第 0002 课 · crawl（抓取）+ index（索引）阶段
+sub: >-
+  两道彼此独立的门，两种彼此独立的失败模式。大多数"我的页面为什么不排名？"的问题
+  都死在这里——甚至还没轮到 rank（排名）登场。
+blurb: >-
+  一个页面在能够 rank（排名）之前要先通过的两道门——以及为什么一道是 robots.txt，
+  另一道是 noindex/title/canonical。
+quizHeading: 哪道门，哪个开关？
+quiz:
+  - q: 某个页面在 <code>robots.txt</code> 里被封禁，但没有 <code>noindex</code>。会发生什么？
+    options:
+      - 爬虫（crawler）永远不会抓取该页面
+      - 页面被索引并参与排名
+      - noindex 标签会被优先读取
+      - canonical（规范链接）地址被改写
+    correct: 0
+    ok: 对——robots.txt 直接拦住了抓取这一步。
+    no: 在 robots.txt 里被封禁 = bot 根本就不会去抓取它。
+  - q: 你给一个<em>同时</em>列在 sitemap 里的页面加上了 <code>noindex</code>。结果如何？
+    options:
+      - 该页面被排除在索引之外
+      - sitemap 会覆盖那个 noindex
+      - robots.txt 也必须配置
+      - 由 canonical 决定哪个版本被索引
+    correct: 0
+    ok: 正确——一个被读到的 noindex 会让它出局，无论在不在 sitemap 里。
+    no: noindex 说了算；出现在 sitemap 里并不会强制索引。
+  - q: 某个页面完全可抓取，却从不出现在索引里。是哪个阶段在拦它？
+    options: [Crawl, Index, Rank, Serve]
+    correct: 1
+    ok: 没错——它通过了 Crawl，但被 Index 这道门挡下了。
+    no: 可抓取意味着 Crawl 已通过——拦它的是 Index 这道门。
+  - q: 你的脚本读取 <code>X-Robots-Tag</code> 响应头，是为了检测……
+    options:
+      - 是否存在 noindex 指令
+      - 整个页面的加载总量
+      - canonical（规范链接）目标地址
+      - 入站反向链接的数量总和
+    correct: 0
+    ok: 正确——X-Robots-Tag 可以在响应头里携带 noindex。
+    no: X-Robots-Tag 携带的是 noindex 这类指令，而不是指标数据。
+primarySource:
+  url: https://developers.google.com/search/docs/crawling-indexing/block-indexing
+  label: '"用 noindex 阻止搜索索引" —— Google Search Central'
+  minutes: 10
+  note: >-
+    直接点出了"封禁 vs noindex"的陷阱：一个被封禁的页面，它的 noindex
+    根本读不到。另可参阅 robots.txt 的入门介绍。
+footnotes:
+  - 'Google Search Central，《搜索的工作原理》（把 crawl（抓取）和 index（索引）分开讲）。'
+  - 'Google Search Central，<a href="https://developers.google.com/search/docs/crawling-indexing/block-indexing">《用 noindex 阻止搜索索引》。</a>'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Gates from '../../../components/lesson/Gates.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+
+<p class="recap">回顾 <a href="/zh/lessons/0001-the-two-pipelines.html">第 0001 课</a>：经典搜索按 <b>crawl（抓取）→ index（索引）→ rank（排名）→ serve（投放）</b>运行。今天我们放大看前两步——因为一个页面只要在任一步失败，就<em>永远</em>无法 rank（排名），而作为开发者，这恰好是你的工具能自动检查的两道门。</p>
+
+<p class="lede">开发者常常把这两者混为一谈。"可抓取（crawlable）"和"可索引（indexable）"是<b>相互独立</b>的。一个页面可以完美可抓取，却仍然拒绝被索引。一个页面也可以被标记为"请索引我"，却从不被抓取。它们是两道不同的门，配两个不同的开关。<sup>[1]</sup></p>
+
+<Callout variant="win" lead="你的收获：">运行一个脚本，让它审计任意 URL 通过这两道门的情况，并准确告诉你是哪一道在失败——这是对"这个页面到底能不能露面？"最紧的反馈回路。</Callout>
+
+## 两道门
+
+<Gates
+  gates={[
+    {
+      kind: 'c',
+      badge: 'CRAWL',
+      title: 'bot 能取到它吗？',
+      q: '在页面被读取<em>之前</em>就受到控制。',
+      items: [
+        '<code>robots.txt</code> 必须<b>允许</b>该路径',
+        'URL 必须返回 <b>200</b>（而不是 404 / 5xx / 无限重定向）',
+        '必须可被发现（出现在 sitemap 里或有链接指向它）',
+      ],
+    },
+    {
+      kind: 'i',
+      badge: 'INDEX',
+      title: '引擎会留下它吗？',
+      q: '在被取到的页面<em>内部</em>受到控制。',
+      items: [
+        '没有 <code>noindex</code>（meta 标签<em>或</em> <code>X-Robots-Tag</code> 响应头）',
+        '有真实内容 + 一个 <code>&lt;title&gt;</code>',
+        '有一个合理的 <code>canonical</code>（规范链接，标明哪个 URL 才是"正主"）',
+      ],
+    },
+  ]}
+/>
+
+<Callout variant="gotcha" lead="把所有人都坑了的陷阱：">在 `robots.txt` 里封禁一个页面<u>并不会</u>把它从索引里移除。如果 bot 被挡住、无法抓取，它就永远<em>读</em>不到你的 `noindex` 标签——所以要让一个页面被取消索引（deindex），你必须<b>允许</b>抓取，并提供 `noindex`。封禁 + noindex 一起上 = noindex 永远不会被看到。<sup>[2]</sup>抓取控制和索引控制指向相反的方向。</Callout>
+
+## 检查清单，以及每一项由什么控制
+
+| 门 | 检查项 | 控制开关在哪里 |
+|------|-------|------------------|
+| <span class="badge c">CRAWL</span> | 路径被允许 | `/robots.txt` |
+| <span class="badge c">CRAWL</span> | 返回 200 | HTTP 状态码 |
+| <span class="badge i">INDEX</span> | 没有 `noindex` | `<meta name="robots">` 或 `X-Robots-Tag` 响应头 |
+| <span class="badge i">INDEX</span> | 有 title | HTML 里的 `<title>` |
+| <span class="badge i">INDEX</span> | 有 canonical | `<link rel="canonical">` |
+
+## 实操技能：用脚本审计一个 URL
+
+你已经有它了——本工作区里的 `tools/crawl_audit.py`。只用标准库，无需安装。核心在于：`urllib.robotparser` 回答抓取这道门，一个极简的 HTML 解析器回答索引这道门。
+
+```python
+# 核心所在 —— 先过 robots 门，再看 index 信号
+def robots_allows(url):
+    rp = urllib.robotparser.RobotFileParser()
+    rp.set_url(origin(url) + "/robots.txt")
+    rp.read()
+    return rp.can_fetch("Googlebot", url)   # stdlib does the parsing
+
+# index gate: noindex? title? canonical?  (from the page's <head>)
+```
+
+<Callout variant="do" lead="现在就动手——">
+反馈回路本身就是这一课的精髓：
+
+1. 自检解析器（离线）：`python3 tools/crawl_audit.py --demo`
+2. 审计一个能通过的页面——Google 自家的文档：`python3 tools/crawl_audit.py https://developers.google.com/search/docs/fundamentals/how-search-works`
+3. **现在审计一个你自己的页面。**然后故意把它弄坏：给一个测试页面加上 `<meta name="robots" content="noindex">`，看着 INDEX 门翻成 FAIL，而 CRAWL 仍然通过。这种对比*正是*这一课要讲的。
+</Callout>
+
+<Runbox
+  cmd="python3 tools/crawl_audit.py https://developers.google.com/search/docs/fundamentals/how-search-works"
+  heading="Audit: https://developers.google.com/.../how-search-works"
+  rows={[
+    { mark: 'PASS', label: 'CRAWL · robots.txt allows the bot' },
+    { mark: 'PASS', label: 'CRAWL · page returns success (200)' },
+    { mark: 'PASS', label: 'INDEX · no noindex directive' },
+    { mark: 'PASS', label: 'INDEX · has a <title>' },
+    { mark: 'PASS', label: 'INDEX · declares a canonical URL' },
+  ]}
+  verdict="crawlable + indexable. (Ranking is a separate fight.)"
+/>
+
+<p class="fineprint">要知道的天花板：这是一次<em>静态</em>抓取。如果一个页面用 JavaScript 渲染（render）它的内容，`urllib` 就看不到——Google 会做第二轮渲染（render），而这个脚本跳过了那一步。那个落差（JS 渲染）是后面一整课的内容。</p>

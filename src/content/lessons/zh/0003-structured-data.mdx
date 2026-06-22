@@ -1,0 +1,135 @@
+---
+num: '0003'
+title: 结构化数据
+kicker: 第 0003 课 · 投放与检索阶段
+sub: 别再让机器去解析你的散文。把事实直接、带好标签地递给它们。
+blurb: >-
+  用 JSON-LD 赢得 rich result（富结果），并把你的事实喂给机器。必填属性 vs
+  推荐属性，经过校验。
+quizHeading: 自测一下
+quiz:
+  - q: Google 推荐哪种结构化数据格式？
+    options: [JSON-LD, CSV, YAML, TOML]
+    correct: 0
+    ok: 对——JSON-LD 是 Google 推荐的格式。
+    no: Google 推荐 JSON-LD；其余几种这里都不用。
+  - q: 结构化数据最直接地帮助哪两个流水线阶段？
+    options:
+      - 投放（Serve）与检索（Retrieve）阶段
+      - 抓取（Crawl）与索引（Index）阶段
+      - 排名（Rank）与抓取（Crawl）阶段
+      - 索引（Index）与投放（Serve）阶段
+    correct: 0
+    ok: 没错——rich result（投放）和干净的抽取（检索）。
+    no: 它服务于投放（rich result）和检索（抽取）。
+  - q: 你的 Product 标记里缺了一个 <em>required（必填）</em> 属性。后果是？
+    options:
+      - rich result 被拦下
+      - 只是一条警告，仍然有效
+      - 整个页面变成 noindex
+      - 爬虫跳过这个页面
+    correct: 0
+    ok: 正确——缺一个必填属性会拦下 rich result。
+    no: 缺一个必填属性会拦下 rich result，仅此而已。
+  - q: 为什么 <code>FAQPage</code> 的问/答对对 AEO 很有用？
+    options:
+      - 每一对都是一个可抽取的答案
+      - 这些问答对直接提升页面排名
+      - 这些问答对现在完全取代了抓取
+      - 这些问答对彻底拦截竞争对手的引用
+    correct: 0
+    ok: 正确——一个问答对就是一个现成、可被引用的答案。
+    no: 结构化数据并不直接影响排名——它帮助抽取。
+primarySource:
+  url: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
+  label: '《Intro to structured data markup in Google Search》——Google Search Central'
+  minutes: 12
+  note: >-
+    各种格式、该放在哪里，以及你的 linter 所镜像的、按类型划分的必填项清单。配合阅读
+    <a href="https://schema.org/docs/gs.html">schema.org
+    Getting Started</a>。完整清单见 <a href="/zh/resources/"><code>RESOURCES.md</code></a>。
+footnotes:
+  - 'Google，《Intro to structured data》（推荐使用 JSON-LD）。'
+  - 'Aggarwal 等人，<a href="https://arxiv.org/abs/2311.09735">GEO (arXiv:2311.09735)</a>。'
+  - 'Google，<a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">《Optimizing for generative AI features.》</a>'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+import Pill from '../../../components/lesson/Pill.astro';
+
+<p class="recap">回顾 <a href="/zh/lessons/0002-crawlable-vs-indexable.html">第 0002 课</a>：你的页面现在已经可被 crawl（抓取）、可被 index（索引）。这让它<em>进入了</em>系统。结构化数据（structured data）是让它脱颖而出的第一根杠杆——也是第一个能<b>同时</b>服务两条流水线的东西。</p>
+
+<p class="lede">结构化数据（structured data）是你嵌入页面、供机器读取的标记，它明确地说："这是一个 Product，价格是 29 USD，有现货。"不需要 NLP 去猜。Google 只推荐一种格式：<b>JSON-LD</b>——一个装着 JSON 的 `<script>` 块，与你可见的 HTML 解耦。<sup>[1]</sup></p>
+
+<Callout variant="win" lead="你的收获：">为一个页面生成有效的 JSON-LD，并用 Google 的必填属性规则去 lint 它——在你发布<em>之前</em>就抓出"这赢不了 rich result（富结果）"，而不是几周后才在 Search Console 里发现。</Callout>
+
+## 散文 vs. 带标签的事实
+
+爬虫在散文里看到的是：*"我们的 Acme Widget Pro 现已发售，仅售二十九美元……"*——引擎必须去<b>推断</b>：那是个产品吗？是价格吗？哪种货币？有现货吗？也许对，也许不对。同样的事实写成 JSON-LD，则不留任何猜测空间：
+
+```json
+{
+  "@type": "Product",
+  "name": "Acme Widget Pro",
+  "offers": {
+    "price": "29.00",
+    "priceCurrency": "USD",
+    "availability": "InStock"
+  }
+}
+```
+
+## 为什么它同时服务两条流水线
+
+<TwoCol
+  cols={[
+    {
+      h: '投放 · 经典搜索',
+      tag: 'seo',
+      body: '<p>有资格获得 <b>rich result（富结果）</b>——星级评分、价格、FAQ 下拉框，直接显示在 SERP 上。更多空间，更多点击。</p>',
+    },
+    {
+      h: '检索 · 答案引擎',
+      tag: 'aeo',
+      body: '<p>当一个 LLM retrieve（检索）你的页面时，它拿到的是一个<b>预先抽取好、毫无歧义的事实</b>，可以直接引用和 citation（引用）——而不必冒着误读你散文的风险。<sup>[2]</sup></p>',
+    },
+  ]}
+/>
+
+<p class="fineprint">现实提醒：Google 表示，结构化数据<em>并不是</em>什么神奇的 AEO 戏法，也没有专门的"AI 标记"——干净的结构化数据只是让你现有的内容更容易被任何机器使用。<sup>[3]</sup>这是诚实的说法，而且这就够了。</p>
+
+## 必填 vs. 推荐
+
+每种类型都有一些被 Google 标为 <Pill kind="req" />（少一个 → 完全没有 rich result）的属性，以及标为 <Pill kind="rec" />（跳过 → 仍然有效，只是不够丰富）的属性。分清哪个是哪个，就是这件事的全部——而这恰恰是 linter 所自动化的。
+
+| 类型 | 它需要什么 |
+|------|---------------|
+| `FAQPage` | <Pill kind="req" /> `mainEntity` → 每个 `Question` 都需要 `name` + `acceptedAnswer.text` |
+| `Product` | <Pill kind="req" /> `name`，以及在 `offers` 里：`price` + `priceCurrency` |
+| `Article` | <Pill kind="rec" /> `headline`、`image`、`datePublished`、`author` |
+
+## 这项技能：用脚本生成并 lint
+
+在这个工作区里：`tools/schema_tool.py`——仅用标准库。它能为某个类型输出一段可复制粘贴的样例，并按上面的规则去 lint 任意 JSON-LD 文件。
+
+<Callout variant="do" lead="现在就做：">
+
+1. 自检：`python3 tools/schema_tool.py --demo`
+2. 拿到可以粘进页面 `<head>` 的标记：`python3 tools/schema_tool.py sample FAQPage`
+3. 故意把它弄坏——保存一份没有 `name` 的 Product JSON-LD，然后 `python3 tools/schema_tool.py lint bad.json` → 看它标出那个 <b>ERROR</b>。
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/schema_tool.py lint bad.json"
+  heading="Linting JSON-LD: @type = Product"
+  rows={[
+    { mark: 'FAIL', label: 'Product missing required property: name' },
+    { mark: 'WARN', label: 'Product missing recommended property: image' },
+    { mark: 'WARN', label: 'Product missing recommended property: offers' },
+  ]}
+  verdict="INVALID — 1 error(s) block the rich result."
+/>
+
+<p class="fineprint">天花板：这个 linter 只编码了 Google 对 3 种类型的规则，并非完整的 schema.org 词汇表。在发布生产环境的标记之前，请用 Google 官方的 <a href="https://search.google.com/test/rich-results">Rich Results Test</a> 以及 <a href="https://validator.schema.org/">schema.org validator</a> 再确认一遍。你的脚本是快速的内循环；它们才是事实的来源。</p>

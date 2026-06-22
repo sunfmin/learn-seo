@@ -1,0 +1,135 @@
+---
+num: '0004'
+title: 为检索而写
+kicker: 第 0004 课 · Retrieve + Generate 阶段
+sub: >-
+  answer engine（答案引擎）引用的单元是一个自足（self-contained）的<em>段落（passage）</em>，而不是一整个页面。所以要去打磨这个段落——而且有一套经过实测的打法，告诉你哪些改动才真正有效。
+blurb: >-
+  答案先行（answer-first）、自足的、引擎能逐字摘取的 chunk（块）——把倒金字塔（inverted pyramid）当作一种 AEO 战术。
+quizHeading: 为引擎塑形
+quiz:
+  - q: answer engine 真正检索（retrieve）并引用（citation）的单元是什么？
+    options:
+      - 一个自足的 passage（段落）
+      - 你的整个域名
+      - '只有 <title> 标签'
+      - XML 站点地图
+    correct: 0
+    ok: 对——passage 才是检索单元，所以要去打磨 passage。
+    no: 引擎会把网络切成 chunk——它检索并引用的是一个 passage，而不是一个域名。
+  - q: 在那篇 GEO 研究中，哪些改动对生成式引擎可见度的提升最大？
+    options:
+      - 更多地重复目标关键词
+      - 用 CSS 隐藏额外文本
+      - 加入统计数据、引语和引用来源
+      - 购买更多外链
+    correct: 2
+    ok: 正确——引用来源、引语和统计数据是实测中提升最大的改动。
+    no: 关键词堆砌、隐藏文本、买外链都不是关键；引用来源、引语、统计数据才是。
+  - q: 在那项研究里，关键词堆砌起到了什么作用？
+    options:
+      - 没帮助——而且往往有害
+      - 它是表现最好的改动
+      - 它对 AI Mode 是必需的
+      - 它可以替代 JSON-LD
+    correct: 0
+    ok: 没错——研究发现堆砌没用，还常常有害。
+    no: 堆砌没有帮助（反而有害）——它是反模式，不是制胜法宝。
+  - q: 为什么要在一节的开头先给出一句简短、直接的答案（倒金字塔）？
+    options:
+      - 它能提升你的域名权威
+      - 它给引擎一个可引用、自足的 chunk
+      - 它能绕过 crawl（抓取）这道门
+      - 它能逼 Google 显示富媒体结果
+    correct: 1
+    ok: 正确——一句简短的开头答案就是一个可引用、自足的 chunk。
+    no: 这关乎可摘取性——一个独立、可引用的 chunk，而不是权威性。
+primarySource:
+  url: https://arxiv.org/abs/2311.09735
+  label: '"GEO: Generative Engine Optimization" — Aggarwal 等人（arXiv:2311.09735, KDD 2024）'
+  minutes: 15
+  note: >-
+    读摘要 + 方法表——三个信号和那个约 40% 的数字都出自这里，在厂商噪音之下的那个中立基线也在这里。搭配 Google 的<a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">《为生成式 AI 功能做优化》</a>一起读（也就是那篇"这依然是 SEO"的文档）。
+footnotes:
+  - 'Aggarwal 等人，<a href="https://arxiv.org/abs/2311.09735">"GEO: Generative Engine Optimization"（arXiv:2311.09735）</a>——引用来源 / 引语 / 统计数据被实测为提升最大的几项改动。'
+  - 'Google Search Central，<a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">《为生成式 AI 功能做优化》</a>（AEO 依然就是 SEO；没有特殊标记）。'
+  - 'Google，<a href="https://developers.google.com/search/docs/appearance/ai-features">《AI 功能与你的网站》。</a>'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+
+<p class="recap">回顾<a href="/zh/lessons/0003-structured-data.html">第 0003 课</a>：<a href="/zh/lessons/0002-crawlable-vs-indexable.html">0002</a> 让页面通过了 crawl（抓取）+ index（索引）这两道门；0003 用 JSON-LD 给页面里的事实打上了标签。两者都让一个页面变得<em>有资格</em>。今天讲的是文字本身——让它成为 AI answer engine（答案引擎）会摘取并署名的那部分内容。</p>
+
+<p class="lede">answer engine 并不会"读你的页面"然后给它排名。它把网络切成一个个 passage（段落），做 embedding（嵌入），<b>retrieve（检索）</b>出最相关的少数几个，再<b>合成（synthesize）</b>出一个答案——并引用它用到的那些 passage。<sup>[1]</sup>所以你真正的优化单元是 <b>passage</b>：一个能独立、完整地回答某个问题、且形态可被摘取的 chunk（块）。</p>
+
+<Callout variant="win" lead="你的收获：">对任意草稿运行 `geo_lint.py`，得到一份 6 个信号的评分卡——统计数据、引用来源、引语、答案先行、分块、不堆砌关键词——每一项都是研究表明能提升引用可见度的一种改动。</Callout>
+
+## 同样的事实，两种形态
+
+信息是完全相同的。只有<em>形态</em>不同——而只有其中一种容易被孤立地检索和引用。
+
+<TwoCol
+  cols={[
+    {
+      h: '大段散文——难以摘取',
+      body: `<p>关于 indexing 有很多事情要考虑，很多人对此感到困惑，老实说 crawling 也是这幅图景的一部分，所以当你在想你的页面会不会出现时，你得整体地、随着时间去思考所有这些相互作用的因素……</p><span class="lift">没有可独立成立的答案。引擎没法在不带上这一整段啰嗦上下文的情况下引用这里的某一句话。</span>`,
+    },
+    {
+      h: '答案先行的 chunk——可摘取',
+      tag: 'aeo',
+      body: `<p><b>crawlable 和 indexable 是一回事吗？</b>不是——它们是两道独立的门。<em>crawlable（可抓取）</em>意味着机器人可以获取这个页面；<em>indexable（可索引）</em>意味着引擎会把它保留下来。</p><p>按 Google 的说法，在 <code>robots.txt</code> 里屏蔽一个 URL 并不会把它从 index 里移除——机器人根本读不到那个 <code>noindex</code>。</p><span class="lift">用两句话给出一个完整、有出处的答案。原样就可直接引用。</span>`,
+    },
+  ]}
+/>
+
+## 什么才真正推动引用——实测出来的打法
+
+[GEO 论文](https://arxiv.org/abs/2311.09735)（Aggarwal 等人，KDD 2024）在一个真实查询的基准集上，针对生成式引擎对内容改动做了 A/B 测试。有三种改动脱颖而出，带来了最高约 <b>40%</b> 的相对可见度提升。<sup>[1]</sup>它们不是风格上的问题——它们让一个 passage 更<em>可引用</em>。
+
+| 改动 | 为什么有效 | 实测结果 |
+|------|--------------|----------|
+| **引用来源** | 一个有出处的论断，引擎重复并署名起来更安全。 | _顶级_ |
+| **加入引语** | 来自权威的逐字引语，本身就是一个现成、可摘取的单元。 | _顶级_ |
+| **加入统计数据** | 一个具体的数字比一个含糊的形容词更可引用。 | _顶级_ |
+| 关键词堆砌 | 老一套的 SEO 条件反射。研究发现它**没有帮助**——而且往往有害。 | 负面 |
+
+在此之上再叠加可摘取性：<b>答案先行（answer-first）</b>（先给答案，再展开——也就是倒金字塔），以及<b>分块</b>（带标题、自足的小节，引擎可以一次只检索其中一个）。0003 里的 `FAQPage` 标记就是这条原则在结构上的体现——每一个问答对都是一个预先分好块的答案。
+
+<Callout variant="gotcha" lead="这依然是 SEO，不是什么魔法文件。">Google 有明确表态：为 AI 功能做优化，跟做好 SEO 是同一件事——可抓取、可索引、有用、有出处。<u>不存在</u>某个特殊的 `llms.txt` 或只面向 AI 的标记能帮你买到引用。<sup>[2]</sup>检索形态是对 0002–0003 这两课的<em>叠加</em>，而不是替代。一个打磨得再漂亮的 passage，若处在一个 `noindex` 页面上，被引用的次数依然是零。</Callout>
+
+## 实操技能：在发布前给草稿做 lint
+
+在这个工作区里你有 `tools/geo_lint.py`。只用标准库。它会拿三个 GEO 信号，外加答案先行、分块、以及一项堆砌检查来给文本/markdown 打分——把"这篇是不是为检索而写的？"变成一个可以塞进发布流水线的、快速且可重复的循环。
+
+```python
+# the three evidence-backed signals, as code
+pcts  = re.findall(r"\d+%", text)              # STATISTICS
+links = re.findall(r"https?://\S+", text)      # CITE SOURCES
+quote = re.findall(r'"[^"]{15,}"', text)       # QUOTATIONS
+# + answer-first (short lead block) + chunked (headings) + anti-stuffing
+```
+
+<Callout variant="do" lead="现在就做——">
+亲自感受一下对比：
+
+1. 自检（离线）：`python3 tools/geo_lint.py --demo`
+2. 对你自己的真实草稿做 lint：`python3 tools/geo_lint.py your-draft.md`
+3. **修好一个 WARN**——加一个统计数据并附上出处，或者把一大段散文拆成一个带标题、答案先行的 chunk——然后重新运行。看着分数往上爬。这个修改循环*就是*这一课的精髓。
+</Callout>
+
+<Runbox
+  cmd="python3 tools/geo_lint.py weak-draft.md"
+  heading="GEO / retrieval-readiness lint"
+  rows={[
+    { mark: 'WARN', label: 'STATISTICS    few/no numbers — add concrete stats' },
+    { mark: 'WARN', label: 'CITE SOURCES  thin sourcing — back claims with references' },
+    { mark: 'WARN', label: 'QUOTATIONS    no quotations — a verbatim quote is highly liftable' },
+    { mark: 'PASS', label: 'ANSWER-FIRST  opens with a 36-word answer block' },
+    { mark: 'WARN', label: 'CHUNKED       0 headings — break into self-contained chunks' },
+    { mark: 'WARN', label: "NO STUFFING   'seo' is 42% of content words (10x) — reads as stuffing" },
+  ]}
+  verdict="1/6 signals — weak — restructure before publishing."
+/>
+
+<p class="fineprint">要知道它的上限：这些是<em>是否存在</em>的启发式判断，而不是质量评判者——linter 能确认你引用了一个来源，但不能确认那个来源好不好、那个论断真不真。它给形态打分；内容实质仍然由你负责。而且高分能提高被引用的几率，并不能保证一定被引用。</p>

@@ -1,0 +1,16 @@
+---
+import { render } from 'astro:content';
+import LessonLayout from '../../../layouts/LessonLayout.astro';
+import { lessonPaths } from '../../../data/lessonRoute';
+
+export async function getStaticPaths() {
+  return lessonPaths('zh');
+}
+
+const { entry, next } = Astro.props;
+const { Content } = await render(entry);
+const canonical = new URL(`/zh/lessons/${Astro.params.slug}.html`, Astro.site).href;
+---
+<LessonLayout data={entry.data} next={next} lang="zh" canonical={canonical}>
+  <Content />
+</LessonLayout>

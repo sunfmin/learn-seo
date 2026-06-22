@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { lessonsFor, slugFor, toolsForLesson } from '../../data/lessons';
+import { type Lang, localizePath } from '../../i18n/ui';
+
+interface Props { lang?: Lang }
+const { lang = 'en' } = Astro.props;
+const en = lang === 'en';
+const lessons = await lessonsFor(lang);
+
+const card = (n: string) =>
+  toolsForLesson(n).length > 0
+    ? `▸ ${toolsForLesson(n).map((t) => t.name).join(' · ')}`
+    : '';
+---
+<BaseLayout
+  lang={lang}
+  title={en ? 'Lessons — SEO & AEO for builders' : '课程 — 面向开发者的 SEO 与 AEO'}
+  description={en
+    ? 'Eight short, developer-first lessons spanning classic search and AI answer engines, each with a runnable audit/automation tool.'
+    : '八节短小、以开发者为先的课程，横跨经典搜索与 AI 答案引擎，每节都配一个可运行的审查/自动化工具。'}
+  jsonld={{
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: lessons.map((l, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: en
+        ? `Lesson ${l.data.num}: ${l.data.title}`
+        : `第 ${l.data.num} 课：${l.data.title}`,
+      url: new URL(localizePath(`/lessons/${slugFor(l)}`, lang), Astro.site).href,
+    })),
+  }}
+>
+  <div class="wrap wide">
+    <p class="kicker">{en ? `The course · ${lessons.length} lessons` : `课程 · 共 ${lessons.length} 节`}</p>
+    <h1>{en ? 'Lessons' : '课程'}</h1>
+    {en ? (
+      <p class="sub">Each one ends in a tangible win — a script you run, a page you fix, a number you can track.</p>
+    ) : (
+      <p class="sub">每一节都以一个看得见的收获收尾——一个你能跑的脚本、一个你能改的页面、一个你能追踪的数字。</p>
+    )}
+
+    <div class="grid">
+      {lessons.map((l) => (
+        <a class="card" href={localizePath(`/lessons/${slugFor(l)}`, lang)}>
+          <span class="num">{en ? `Lesson ${l.data.num}` : `第 ${l.data.num} 课`}</span>
+          <span class="ct">{l.data.title}</span>
+          <span class="cd">{l.data.blurb}</span>
+          {card(l.data.num) && <span class="tool">{card(l.data.num)}</span>}
+        </a>
+      ))}
+    </div>
+
+    {en ? (
+      <p style="margin-top:2rem; font-size:.92rem; color:var(--muted)">
+        Also: the <a href={localizePath('/reference/glossary.html', lang)}>glossary</a> (shared vocabulary,
+        tagged SEO / AEO / BOTH) and the <a href={localizePath('/resources/', lang)}>resources</a> (every
+        primary source the lessons cite).
+      </p>
+    ) : (
+      <p style="margin-top:2rem; font-size:.92rem; color:var(--muted)">
+        另外：<a href={localizePath('/reference/glossary.html', lang)}>术语表</a>（共享词汇，
+        标注 SEO / AEO / BOTH）以及<a href={localizePath('/resources/', lang)}>资料</a>（课程引用的每一个一手来源）。
+      </p>
+    )}
+  </div>
+</BaseLayout>

@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { groups } from '../../i18n/glossary';
+import { type Lang, localizePath } from '../../i18n/ui';
+
+interface Props { lang?: Lang }
+const { lang = 'en' } = Astro.props;
+const en = lang === 'en';
+const canonical = new URL(localizePath('/reference/glossary.html', lang), Astro.site).href;
+---
+<BaseLayout
+  lang={lang}
+  title={en ? 'Glossary — SEO / AEO for Builders' : '术语表 — 面向开发者的 SEO / AEO'}
+  description={en
+    ? 'Shared vocabulary for SEO, AEO, and the automation built on top — tagged SEO (classic search), AEO (AI answer engines), or BOTH.'
+    : 'SEO、AEO 及其上自动化的共享词汇——标注 SEO（经典搜索）、AEO（AI 答案引擎）或 BOTH（两者）。'}
+  canonical={canonical}
+>
+  <div class="wrap">
+    <p class="kicker">{en ? 'Reference · adhere to these definitions in every lesson' : '参考 · 每节课都遵循这些定义'}</p>
+    <h1>{en ? 'Glossary' : '术语表'}</h1>
+    {en ? (
+      <p class="sub">Shared vocabulary for SEO, AEO, and the automation built on top of them. Tags: <span class="tag seo">SEO</span> classic search · <span class="tag aeo">AEO</span> AI answer engines · <span class="tag both">BOTH</span></p>
+    ) : (
+      <p class="sub">SEO、AEO 及其上自动化的共享词汇。标签：<span class="tag seo">SEO</span> 经典搜索 · <span class="tag aeo">AEO</span> AI 答案引擎 · <span class="tag both">BOTH</span> 两者</p>
+    )}
+
+    {groups.map((g) => (
+      <div class="grp">
+        <h2>{g.h[lang]}</h2>
+        <dl>
+          {g.terms.map((term) => (
+            <>
+              <dt>{term.t[lang]} <span class:list={['tag', term.tag]}>{term.tag.toUpperCase()}</span></dt>
+              <dd set:html={term.d[lang]} />
+            </>
+          ))}
+        </dl>
+      </div>
+    ))}
+
+    <footer class="gloss-foot">
+      {en ? (
+        <Fragment>
+          Part of the SEO/AEO learning workspace · see <a href={localizePath('/lessons/0001-the-two-pipelines.html', lang)}>Lesson 0001</a> · grounded in <a href={localizePath('/', lang)}>the mission</a>.<br />
+          Ask your teacher (this agent) to clarify or expand any term.
+        </Fragment>
+      ) : (
+        <Fragment>
+          SEO/AEO 学习空间的一部分 · 见<a href={localizePath('/lessons/0001-the-two-pipelines.html', lang)}>第 0001 课</a> · 立足于<a href={localizePath('/', lang)}>本课的使命</a>。<br />
+          就任何术语，尽管让你的老师（这个 agent）澄清或展开。
+        </Fragment>
+      )}
+    </footer>
+  </div>
+</BaseLayout>
+
+<style>
+  dl { margin: 0; }
+  dt { font-weight: 600; font-size: 1.05rem; margin-top: 1.6rem; color: var(--ink); }
+  dt .tag { margin-left: 0.4rem; vertical-align: middle; }
+  dd { margin: 0.25rem 0 0; color: #333; }
+  .grp { margin-top: 2.6rem; padding-top: 0.4rem; border-top: 2px solid var(--rule); }
+  .grp h2 { font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .gloss-foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--muted); }
+</style>

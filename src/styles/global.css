@@ -11,6 +11,16 @@ body{
   font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   line-height:1.58; margin:0; -webkit-font-smoothing:antialiased;
 }
+/* Chinese pages: a clean system CJK sans stack (PingFang / YaHei / Noto Sans),
+   far more readable on screen than the Latin book serif falling back to Songti.
+   Scoped to <html lang="zh-CN"> so English pages keep their serif. System fonts
+   only — no web-font download (the course teaches performance). */
+html[lang="zh-CN"] body{
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",
+    "Noto Sans CJK SC","Source Han Sans SC","WenQuanYi Micro Hei",
+    system-ui,-apple-system,sans-serif;
+  line-height:1.7;
+}
 a{color:var(--aeo)}
 code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-size:.86em;
   font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
@@ -25,6 +35,9 @@ code{background:var(--code); padding:.05rem .35rem; border-radius:.25rem; font-s
 .site-head nav{margin-left:auto; display:flex; gap:1.1rem; flex-wrap:wrap; font-size:.92rem}
 .site-head nav a{color:var(--muted); text-decoration:none}
 .site-head nav a:hover,.site-head nav a[aria-current="page"]{color:var(--seo)}
+.site-head nav a.lang-toggle{border:1px solid var(--rule); border-radius:1rem;
+  padding:.05rem .6rem; color:var(--seo); font-size:.84rem}
+.site-head nav a.lang-toggle:hover{background:var(--seobg)}
 
 .site-foot{max-width:44rem; margin:4rem auto 0; padding:1.2rem 1.5rem 3rem;
   border-top:1px solid var(--rule); font-size:.86rem; color:var(--muted)}

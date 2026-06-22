@@ -5,8 +5,11 @@ import { glob } from 'astro/loaders';
 // structured — metadata, the quiz answer key + feedback, the primary source, and
 // footnotes — lives here in typed frontmatter. The layout renders them and computes
 // the Next-lesson pager from collection order, so nothing is hand-typed twice.
+// Lessons are organised by locale: `src/content/lessons/<lang>/NNNN-*.mdx`
+// (ADR 0003). The glob recurses, so an entry id is `en/0001-…` / `zh/0001-…`;
+// the locale-aware helpers in src/data/lessons.ts split the lang off the id.
 const lessons = defineCollection({
-  loader: glob({ pattern: '*.mdx', base: 'src/content/lessons' }),
+  loader: glob({ pattern: '**/*.mdx', base: 'src/content/lessons' }),
   schema: z.object({
     num: z.string(), // '0001'
     title: z.string(),

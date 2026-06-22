@@ -11,9 +11,24 @@ const SITE = 'https://learn-seo.example';
 
 export default defineConfig({
   site: SITE,
+  // Bilingual (ADR 0003): English is the default locale at `/`; Chinese lives
+  // under `/zh/`. prefixDefaultLocale:false keeps the English URLs unprefixed.
+  i18n: {
+    locales: ['en', 'zh'],
+    defaultLocale: 'en',
+    routing: { prefixDefaultLocale: false },
+  },
   integrations: [
     mdx(),
     sitemap({
+      // Dogfooding hreflang: the sitemap groups each page with its other-language
+      // twin and emits <xhtml:link rel="alternate" hreflang> — the same hreflang
+      // the pages carry in <head>. A course that teaches i18n shouldn't ship a
+      // sitemap that hides its translations.
+      i18n: {
+        defaultLocale: 'en',
+        locales: { en: 'en', zh: 'zh-CN' },
+      },
       // Lessons + the glossary are routed at `…/<name>.html`; directory build
       // format gives those pages a trailing slash in the sitemap, while the served
       // file, the internal links, and the canonical all use no slash. Normalise so

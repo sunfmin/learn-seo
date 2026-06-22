@@ -1,0 +1,151 @@
+---
+num: '0006'
+title: JS 渲染缺口
+kicker: 第 0006 课 · 你的爬虫漏掉了什么
+sub: >-
+  你的页面有两个版本：服务器发出的 HTML，以及 JavaScript 运行之后的 DOM。一半的
+  bot 永远只看到第一个版本——而它们决定了你存不存在。
+blurb: >-
+  Google 延迟（deferred）的两波（two-wave）渲染（render），以及为什么你的 urllib
+  爬虫——还有大多数 AI 爬虫——永远只看到原始的、未跑 JS 的 HTML。
+quizHeading: 留意这道缺口
+quiz:
+  - q: 在 Google 的流水线里，你的 JavaScript 究竟什么时候才真正运行？
+    options:
+      - 永不运行——Google 完全忽略 JS
+      - 在抓取（crawl）期间，在同一个请求里运行
+      - 之后，在一个独立的延迟渲染队列里运行
+      - 只有在你提交了 sitemap 时才运行
+    correct: 2
+    ok: 对——渲染（render）是一个独立的、延迟的队列，不是抓取（crawl）的一部分。
+    no: Google 确实会运行 JS——但是在之后，在抓取（crawl）结束后的一个延迟渲染队列里。
+  - q: 为什么 <code>crawl_audit.py</code> 会对一个没有任何可见内容的页面打出 PASS？
+    options:
+      - 它检查的是排名，而不是内容
+      - 它用 urllib 抓取原始 HTML（raw HTML），从不运行 JS
+      - robots.txt 把内容对它隐藏了
+      - 这个页面用了 SSR（服务端渲染）
+    correct: 1
+    ok: 正确——它是用 urllib 抓取原始 HTML（raw HTML）；从不运行 JS。
+    no: 它用 urllib 抓取原始 HTML（raw HTML），从不执行 JavaScript。
+  - q: 为什么客户端渲染（CSR）对 AEO 比对传统 SEO 更糟糕？
+    options:
+      - 许多独立的 AI 爬虫不跑 JS，所以它们看到的是空壳
+      - AI 引擎故意惩罚 React 站点
+      - JSON-LD 在 AI 答案里被禁用了
+      - 并没有更糟——两者处理方式完全一样
+    correct: 0
+    ok: 是的——不跑 JS 的（no-JS）AI 爬虫看到的是空壳，而 Googlebot 最终会渲染。
+    no: 独立的 AI 爬虫通常会跳过 JS，所以对 AEO 来说 CSR 内容是缺失的。
+  - q: 某个信号从 0（原始）跳到很多（渲染后）。<code>render_gap.py</code> 把它叫作什么，修法是什么？
+    options:
+      - 一条富媒体结果（rich result）——把它提交到 Search Console
+      - 一个 canonical 冲突——挑一个 URL
+      - 一个 robots 屏蔽——编辑 robots.txt
+      - JS 依赖——把那部分内容搬进服务器的 HTML 响应里
+    correct: 3
+    ok: 正确——JS 依赖；修法是把它放进服务器的 HTML（SSR/SSG）里。
+    no: 它被标记为 JS-DEP；把那部分内容搬进服务端渲染的 HTML 里。
+primarySource:
+  url: https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
+  label: '“Understand the JavaScript SEO basics” — Google Search Central'
+  minutes: 10
+  note: >-
+    来自引擎自己的说法：三个阶段（crawl → render → index），以及为什么渲染（render）是
+    一个延迟队列。把它和 <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">“How
+    Search Works”</a> 里的渲染说明，以及 <a href="/zh/resources/"><code>RESOURCES.md</code></a> 里的 AI 爬虫控制缺口配合着看。
+footnotes:
+  - 'Google，<a href="https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics">“Understand the JavaScript SEO basics”</a>——抓取 / 渲染 / 索引（crawl / render / index）阶段；渲染是一个延迟队列。'
+  - 'Google，<a href="https://developers.google.com/search/docs/fundamentals/how-search-works">“In-depth guide to how Google Search works”</a>——“使用近期版本的 Chrome”进行渲染并运行 JS。'
+  - 'RESOURCES.md “Gaps”——AI 爬虫控制没有稳定的规范；追踪器/爬虫通常抓取原始 HTML（raw HTML）。'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Pipeline from '../../../components/lesson/Pipeline.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+
+<p class="recap">回顾 <a href="/zh/lessons/0002-crawlable-vs-indexable.html">第 0002 课</a>：你运行了 `crawl_audit.py`，它说“可抓取 + 可索引”。但那个工具是用 `urllib` 抓取的——它读取的是<em>原始</em>响应，从不运行一行 JS。那么它放行的那个页面，究竟<em>含有</em>任何东西吗？这一课就来找出这道缺口。</p>
+
+<p class="lede">Google 并不是一次性就把你的页面索引（index）了。它先抓取（crawl）<b>原始 HTML（raw HTML）</b>，然后——单独地、在之后、在它的资源允许时——一个 headless Chrome 会<b>渲染（render）</b>这个页面，运行 JavaScript，再把 JS 产出的东西重新索引。<sup>[1]</sup>渲染是一个<em>延迟队列</em>，不是抓取的一部分。如果你的内容只在 JS 之后才存在，那么在第二波到来之前它都是不可见的——而对很多 bot 来说，则是永远不可见。</p>
+
+<Callout variant="win" lead="你的收获：">在一个页面的<em>原始</em> HTML 和它的<em>渲染后的 DOM（rendered DOM）</em>上运行 `render_gap.py`，得到一份逐信号的差异对比——词数、链接、JSON-LD、标题——精确标出哪些信号<b>只在 JavaScript 之后</b>才存在。那正是一个不跑 JS 的（no-JS）bot 永远看不到、而 Google 看得很晚的内容。</Callout>
+
+## 两波，不是一波
+
+直接引自 Google 的 JavaScript-SEO 文档：页面是分阶段处理的，而渲染（render）位于它自己的队列里。<sup>[1]</sup>
+
+<Pipeline
+  variant="seo"
+  label="Google 的流水线 · 两波"
+  stages={[
+    { name: 'Crawl', do: '第一波——抓取原始 HTML 并索引它。还没有 JS。' },
+    { name: 'Render', do: '延迟队列——headless Chrome 在资源允许时运行 JS' },
+    { name: 'Re-index', do: '第二波——JS 产出的内容、链接 + schema 被索引，前提是渲染成功了' },
+  ]}
+  feeds="▲ 渲染（Render）是它自己的<b>延迟队列</b>——可能要几秒，也可能更久得多。"
+/>
+
+<p>Google <em>确实</em>会“使用近期版本的 Chrome，以类似浏览器渲染页面的方式”运行你的 JavaScript。<sup>[2]</sup>问题在于<em>什么时候</em>，以及<em>还有谁不运行</em>。</p>
+
+## 你的审计工具是个不跑 JS 的 bot——大多数 AI 爬虫也是
+
+第 0002 课里的 `crawl_audit.py`，正是那种只看得到第一波的抓取器：
+
+```python
+# crawl_audit.py — the fetch is plain HTTP. No browser, no JS.
+req = urllib.request.Request(url, headers={"User-Agent": "Googlebot"})
+body = urllib.request.urlopen(req).read()   # <- raw HTML only
+```
+
+<p>所以如果你的 `<title>`、内容和 canonical 是 React 在加载之后注入的，`crawl_audit.py` 就看不到它们——而它可能仍然会对着一个近乎空壳的页面打出 PASS。同样的盲区也重重地打在 AEO 这一侧：独立的 AI 爬虫通常抓取原始 HTML（raw HTML）并且<b>不执行 JavaScript</b>，而且控制它们也没有定型的标准。<sup>[3]</sup>那些 Googlebot 最终会渲染的客户端内容，可能根本到不了答案引擎（answer engine）那里。</p>
+
+<TwoCol
+  cols={[
+    {
+      h: '服务端渲染（SSR / SSG）——内容在第一个字节里',
+      tag: 'seo',
+      body: `<p>HTML 响应里已经含有文本、链接和 JSON-LD。JS 只是锦上添花。</p><p>第一波 Googlebot、不跑 JS 的 AI 爬虫、你自己的审计——<em>所有人</em>，都立刻看得到。</p><span class="tagline good">✓ 现在就被索引 · 现在就可被引用</span>`,
+    },
+    {
+      h: '客户端渲染（CSR）——空壳 + bundle',
+      tag: 'aeo',
+      body: `<p>原始 HTML 就是 <code>&lt;div id="root"&gt;&lt;/div&gt;</code>。所有内容都通过 JS 送达。</p><p>对不跑 JS 的 bot 不可见；Googlebot 只在延迟渲染波时才索引它——前提是它渲染得干净。</p><span class="tagline bad">✗ 对 Google 延迟 · 对 AEO 缺失</span>`,
+    },
+  ]}
+/>
+
+## 工具：对比两个版本
+
+<p>你给 `render_gap.py` 两样东西——<em>原始</em> HTML（它可以自己抓，就像第 0002 课的工具那样）和<em>渲染后的 DOM（rendered DOM）</em>（这个由你来捕获：DevTools → Elements → 右键点 `<html>` → <em>Copy outerHTML</em>）。它从两者中提取相同的信号，并标记出任何从 ≈0 跳到很多的信号：</p>
+
+```python
+# share of each signal present WITHOUT JS
+visible = raw[key] / rendered[key]          # 1.0 = fully server-rendered
+js_dep  = rendered[key] > 0 and visible < 0.5   # needs JS to exist
+# headline keys on visible TEXT: >=90% server-rendered, <=10% client-rendered
+```
+
+<Callout variant="do" lead="现在就动手：">
+
+1. 自检（离线）：`python3 tools/render_gap.py --demo`
+2. 挑一个页面。把它渲染后的 DOM 存为 `rendered.html`（DevTools → Copy outerHTML），然后：`python3 tools/render_gap.py https://yoursite.com/page rendered.html`
+3. 用同样的方式测一个<b>已知的 SPA</b>（一个 React/Vue 应用的路由）——看着每个信号都被标成 <b>JS-DEP</b>。那就是一个不跑 JS 的爬虫看到的东西。
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/render_gap.py https://app.example.com/blog/geo rendered.html"
+  heading="Render gap — raw HTML (no JS)  vs  rendered DOM (after JS)"
+  rows={[
+    { mark: 'FAIL', label: 'visible words      no JS 0 · with JS 209 · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'a links            no JS 0 · with JS 3   · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'JSON-LD blocks     no JS 0 · with JS 1   · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'h1 headings        no JS 0 · with JS 1   · visible 0% · JS-DEP' },
+    { mark: 'FAIL', label: 'h2 headings        no JS 0 · with JS 1   · visible 0% · JS-DEP' },
+  ]}
+  verdict="CLIENT-SIDE RENDERED — the raw HTML is an empty shell. No-JS AI crawlers see ~nothing; Googlebot indexes it only on the deferred render wave."
+/>
+
+<Callout variant="gotcha" lead="JSON-LD 陷阱：你在第 0003 课里那份完美的 schema 可能是不可见的。">如果你是通过 Google Tag Manager 或客户端 JS 注入结构化数据，那它<em>只</em>存在于渲染后的 DOM 里——所以 `schema_tool.py` 能验证它，Googlebot 可能在第二波时拾取它，但一个不跑 JS 的 AI 爬虫一个属性都看不到。<sup>[3]</sup>客户端渲染的 `<title>` 和 canonical 也是同样的故事：`crawl_audit.py` 可以在原始响应是空壳的情况下放一个页面过关。<b>通过抓取/索引这道关卡 ≠ 内容真的在那里。</b>把事实放进服务器发出的 HTML 里。</Callout>
+
+<p class="fineprint">要知道的上限：`render_gap.py` 不运行浏览器——渲染后的 DOM 由你提供，就像第 0005 课的追踪器拿的是你捕获的引擎输出一样。它的“visible words”统计的是文本节点，不是布局；一个完全由 JS 构建、Google 渲染起来毫无问题的页面，在这里仍然会被标记，而这正是重点——它展示的是<em>不跑 JS 的</em>视角，那是一个真实存在的受众，而不是对 Googlebot 的最终裁决。</p>

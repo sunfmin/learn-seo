@@ -1,0 +1,101 @@
+---
+num: '0001'
+title: 两条管线
+kicker: 第 0001 课 · 基础
+sub: 在任何招式讲得通之前，你得先理解它所服务的那台机器。机器有两台。
+blurb: >-
+  经典搜索（crawl 抓取 → index 索引 → rank 排名）对比 AI 答案引擎（retrieve 检索 → generate 生成 →
+  cite 引用）。整门课都挂在这套心智模型上。
+quizHeading: 把招式放到管线上
+quiz:
+  - q: 在经典搜索中，哪个阶段决定结果出现的<em>顺序</em>？
+    options: [Crawl, Index, Rank, Serve]
+    correct: 2
+    ok: 对。排名（rank）就是排序的那一步。
+    no: 排名（rank）会为某个查询给已索引的页面排序。
+  - q: AI 答案引擎的答案主要来自……
+    options:
+      - 已经被抓取并索引的页面
+      - 一个单独的私有事实数据库
+      - 模型冻结的训练权重
+      - 来自广告合作伙伴的付费位置
+    correct: 0
+    ok: 没错——引擎把答案锚定在实时索引的网络上。
+    no: 引擎从已抓取并索引的网络中检索（通常通过一次实时搜索）。
+  - q: 对 AEO 而言，为什么被<em>索引</em>仍然重要？
+    options:
+      - 引擎从已索引的网络中检索
+      - 索引会直接改写模型权重
+      - 经典排名现在已经完全过时
+      - 抓取器会跳过缺少结构化数据的页面
+    correct: 0
+    ok: 正确——检索读取的是索引，所以被索引是最低门槛。
+    no: 检索读取的是已索引的网络——没有索引，就没有检索。
+  - q: 你的工具会校验 <code>robots.txt</code> 和 <code>sitemap.xml</code>。它服务的是哪个阶段？
+    options: [Crawl, Index, Rank, Cite]
+    correct: 0
+    ok: 正确——robots.txt 和 sitemap 都是抓取（crawl）阶段的控制项。
+    no: 这些文件告诉抓取器该取哪些内容——属于抓取（Crawl）阶段。
+primarySource:
+  url: https://developers.google.com/search/docs/fundamentals/how-search-works
+  label: '“In-depth guide to how Google Search works” — Google Search Central'
+  minutes: 15
+  note: >-
+    crawl 抓取 → index 索引 → serve 投放这条管线，直接出自引擎自己的文档。这是关于管线一的最高可信度来源。
+footnotes:
+  - 'Google Search Central, “How Search Works.”'
+  - 'Aggarwal et al., “GEO: Generative Engine Optimization,” <a href="https://arxiv.org/abs/2311.09735">arXiv:2311.09735</a> (KDD 2024); and Google Search Central, <a href="https://developers.google.com/search/docs/appearance/ai-features">“AI features and your website.”</a>'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Pipeline from '../../../components/lesson/Pipeline.astro';
+
+<p class="lede">你是个开发者，在做营销自动化。所以别用那套"小技巧"的框架去理解它。唯一经得起时间考验的模型是这个：<b>你的内容会流经一条由若干独立阶段组成的管线，而每一招 SEO/AEO 招式都只是在某一个阶段上做的一次干预。</b>把这些阶段吃透，每一招就都能找到自己的位置。</p>
+
+<Callout variant="win" lead="本课你能拿下的收获：">给你任意一招 SEO 或 AEO 招式，你都能说出它瞄准的是哪条管线、哪个阶段——以及因此你的工具必须为它产出什么。</Callout>
+
+## 管线一 —— 经典搜索
+
+这就是"SEO"一直以来的含义。Google（或 Bing）会按顺序运行四个阶段。一个在早期阶段就失败的页面，永远到不了后面的阶段——你没法给一个从未被索引的页面排名，你也没法索引一个从未被抓取的页面。<sup>[1]</sup>
+
+<Pipeline
+  variant="seo"
+  label="经典搜索 · SEO"
+  stages={[
+    { name: 'Crawl', do: 'bot 抓取你的页面' },
+    { name: 'Index', do: '解析并存入数据库' },
+    { name: 'Rank', do: '为某个查询给页面排序' },
+    { name: 'Serve', do: '渲染结果页' },
+  ]}
+/>
+
+## 管线二 —— AI 答案引擎
+
+这就是"AEO"（又称 GEO）。ChatGPT、Claude、Perplexity 以及 Google 的 AI Overviews 不会给你十条链接——它们会组合出一个答案，并<em>引用</em>少数几个来源。这里的阶段不一样：<b>retrieve（检索）</b>候选段落（passage），<b>synthesize（合成）</b>出一个答案，<b>cite（引用）</b>所用到的来源。<sup>[2]</sup>
+
+<Pipeline
+  variant="aeo"
+  label="AI 答案引擎 · AEO / GEO"
+  stages={[
+    { name: 'Retrieve', do: '拉取段落，通常通过实时搜索' },
+    { name: 'Synthesize', do: 'LLM 写出一个答案' },
+    { name: 'Cite', do: '标注所用到的来源' },
+  ]}
+  feeds="▲ 检索通常读取的是与管线一<b>相同的、已抓取并索引的网络</b>。"
+/>
+
+<Callout variant="insight" lead="关键的连接点：">AEO 不会取代 SEO——它叠加在 SEO 之上。大多数答案引擎都从已索引的网络中检索（往往在底层跑一次搜索查询）。所以可抓取（crawlable）和可索引（indexable）是<em>两者共同的最低门槛</em>。在此之上，AEO 又加了一个新问题：一旦被检索到，你的页面是否容易从中提取出一个干净、可引述、可被引用的事实？</Callout>
+
+## 为什么开发者要在意：每个阶段都是你软件要触碰的东西
+
+这套模型值得记下来的原因在于：每个阶段都对应到一个具体的产物，你的自动化要么读它、要么写它。
+
+| 阶段 | 你的工具在这里做什么 |
+|-------|------------------------------|
+| **Crawl** | 生成/校验 `robots.txt` 和 `sitemap.xml`；检查页面返回 200 且未被屏蔽。 |
+| **Index** | 无头渲染页面；核验标题、canonical（规范链接），并确认内容在 HTML 里，而不是藏在 JS 后面。 |
+| **Rank** | 审查内容深度、内链、页面速度；通过 API 跟踪关键词排名位置。 |
+| **Serve** | 输出 `schema.org` 结构化数据，从而赢得富结果（rich result）与摘要。 |
+| **Retrieve** | 让事实可被提取：清晰的标题、自足的句子、结构化数据。 |
+| **Cite** | 跟踪哪些 AI 引擎在哪些 prompt 上、随时间如何引用你。 |
+
+后续课程会一格一格地深入展开。今天你只需要这张地图。

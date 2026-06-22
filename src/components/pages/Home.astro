@@ -1,0 +1,131 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { lessonsFor, slugFor, toolsForLesson } from '../../data/lessons';
+import { type Lang, localizePath } from '../../i18n/ui';
+
+interface Props { lang?: Lang }
+const { lang = 'en' } = Astro.props;
+const en = lang === 'en';
+const lessons = await lessonsFor(lang);
+
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: en
+    ? 'SEO, AEO & Marketing Automation for builders'
+    : '面向开发者的 SEO、AEO 与营销自动化',
+  description: en
+    ? 'A hands-on, developer-first course on classic search (SEO) and AI answer engines (AEO/GEO), each lesson shipping a runnable audit/automation tool.'
+    : '一门动手实践、以开发者为先的课程，覆盖经典搜索（SEO）与 AI 答案引擎（AEO/GEO），每课都附一个可运行的审查/自动化工具。',
+  inLanguage: en ? 'en' : 'zh-CN',
+  provider: { '@type': 'Organization', name: 'learn-seo' },
+  hasCourseInstance: {
+    '@type': 'CourseInstance',
+    courseMode: 'online',
+    courseWorkload: en
+      ? `${lessons.length} short lessons, one tangible win each`
+      : `${lessons.length} 节短课，每节都有一个看得见的收获`,
+  },
+};
+
+const card = (n: string) =>
+  toolsForLesson(n).length > 0
+    ? `▸ ${toolsForLesson(n).map((t) => t.name).join(' · ')}`
+    : '';
+---
+<BaseLayout
+  lang={lang}
+  title={en
+    ? 'SEO & AEO for builders — a hands-on course'
+    : '面向开发者的 SEO 与 AEO — 一门动手实践课'}
+  description={en
+    ? 'Learn the crawl→index→rank and retrieve→generate→cite pipelines well enough to build software against them. Eight lessons, eight runnable tools.'
+    : '把 crawl→index→rank 与 retrieve→generate→cite 两条管线学到能写软件去对接的程度。八节课，八个可运行工具。'}
+  jsonld={jsonld}
+>
+  <div class="wrap wide">
+    <p class="kicker">{en ? 'SEO · AEO · Marketing automation' : 'SEO · AEO · 营销自动化'}</p>
+    {en ? (
+      <h1>Make software that does SEO &amp; AEO.</h1>
+    ) : (
+      <h1>写出能做 SEO 与 AEO 的软件。</h1>
+    )}
+    {en ? (
+      <p class="sub">For developers who'd rather encode the mechanism than memorize the best practice.</p>
+    ) : (
+      <p class="sub">献给宁愿把机制写进代码、也不愿背诵“最佳实践”的开发者。</p>
+    )}
+
+    {en ? (
+      <p class="lede">
+        Two pipelines decide whether anyone finds your content. This course teaches
+        both deep enough to <b>build tooling against them</b> — and every lesson hands
+        you a runnable script that does exactly that.
+      </p>
+    ) : (
+      <p class="lede">
+        两条管线（pipeline）决定了你的内容能不能被人找到。这门课把两条都讲到
+        <b>足以让你写工具去对接</b>的程度——而且每节课都给你一个正好做这件事的可运行脚本。
+      </p>
+    )}
+
+    <div class="pipes">
+      <div class="pipe seo">
+        <div class="h">{en ? 'Classic search — SEO' : '经典搜索 — SEO'}</div>
+        {en ? (
+          <div class="b"><b>crawl → index → rank → serve.</b> A bot fetches, an index stores, a ranker orders the ten blue links. Measured by a first-party API.</div>
+        ) : (
+          <div class="b"><b>crawl → index → rank → serve.</b> bot 抓取，index 存储，ranker 排出那十条蓝色链接。可用第一方（first-party）API 测量。</div>
+        )}
+      </div>
+      <div class="pipe aeo">
+        <div class="h">{en ? 'AI answer engines — AEO / GEO' : 'AI 答案引擎 — AEO / GEO'}</div>
+        {en ? (
+          <div class="b"><b>retrieve → generate → cite.</b> An engine pulls passages, writes one answer, and links its sources. The win is being <em>cited</em>.</div>
+        ) : (
+          <div class="b"><b>retrieve → generate → cite.</b> 引擎拉取段落、写出一个答案、并链接它的来源。赢点是被<em>引用（cited）</em>。</div>
+        )}
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <a class="btn primary" href={localizePath('/lessons/', lang)}>{en ? 'Start the course →' : '开始学习 →'}</a>
+      <a class="btn ghost" href={localizePath('/tools/', lang)}>{en ? 'Browse the tools' : '浏览工具'}</a>
+    </div>
+
+    <h2>{en ? 'The lessons' : '课程'}</h2>
+    <div class="grid">
+      {lessons.map((l) => (
+        <a class="card" href={localizePath(`/lessons/${slugFor(l)}`, lang)}>
+          <span class="num">{en ? `Lesson ${l.data.num}` : `第 ${l.data.num} 课`}</span>
+          <span class="ct">{l.data.title}</span>
+          <span class="cd">{l.data.blurb}</span>
+          {card(l.data.num) && <span class="tool">{card(l.data.num)}</span>}
+        </a>
+      ))}
+    </div>
+
+    <h2>{en ? "How it's built" : '它是怎么搭的'}</h2>
+    {en ? (
+      <p>
+        This site practices what it teaches. It's a <b>server-rendered Astro</b> site
+        (content in the first byte — <a href={localizePath('/lessons/0006-the-js-rendering-gap.html', lang)}>Lesson 0006</a>),
+        it emits a <b>sitemap.xml</b> at build (<a href={localizePath('/lessons/0007-sitemaps-and-indexnow.html', lang)}>Lesson 0007</a>),
+        and each page carries canonical, Open Graph, and JSON-LD
+        (<a href={localizePath('/lessons/0003-structured-data.html', lang)}>Lesson 0003</a>,
+        <a href={localizePath('/lessons/0008-eeat.html', lang)}>0008</a>). Every claim in the lessons is
+        grounded in a <a href={localizePath('/resources/', lang)}>primary source</a>, never memory.
+      </p>
+    ) : (
+      <p>
+        本站践行它所教的东西。它是一个<b>服务端渲染（SSR）的 Astro</b> 站点
+        （内容就在第一个字节里——<a href={localizePath('/lessons/0006-the-js-rendering-gap.html', lang)}>第 0006 课</a>），
+        构建时会生成 <b>sitemap.xml</b>（<a href={localizePath('/lessons/0007-sitemaps-and-indexnow.html', lang)}>第 0007 课</a>），
+        每个页面都带 canonical、Open Graph 和 JSON-LD
+        （<a href={localizePath('/lessons/0003-structured-data.html', lang)}>第 0003 课</a>、
+        <a href={localizePath('/lessons/0008-eeat.html', lang)}>0008</a>）。课程里的每条论断都基于
+        <a href={localizePath('/resources/', lang)}>一手来源（primary source）</a>，绝不靠记忆。
+      </p>
+    )}
+  </div>
+</BaseLayout>

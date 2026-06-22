@@ -1,0 +1,155 @@
+---
+num: '0005'
+title: 衡量效果
+kicker: 第 0005 课 · 它奏效了吗？
+sub: >-
+  两块记分牌，极度不对称。经典搜索给你一个第一方 API。AI
+  引用什么都不给你——于是你只能搭建那个所有人都在搭的 proxy（代理指标）。
+blurb: >-
+  两块记分牌：Search Console 通过 API 提供 ground truth（真实基准）；AI
+  引用没有任何 API，于是你只能搭建所有人都在搭的 proxy（代理指标）。
+quizHeading: 读懂记分牌
+quiz:
+  - q: 哪一边有你今天就能调用的第一方衡量 API？
+    options:
+      - 经典搜索（Google Search Console）
+      - AI 答案的 citation（引用）
+      - 两边一样有
+      - 两边都没有
+    correct: 0
+    ok: 对——Search Console 是真实的第一方数据，你可以直接查询。
+    no: 经典搜索有 Search Console；AI 引用目前还没有 API。
+  - q: 每一个 AEO 引用追踪工具是怎么拿到它的数字的？
+    options:
+      - 第一方引擎引用 API
+      - 跑一套 prompt（提示词）库并解析返回的结果
+      - 读取站点的 robots.txt
+      - Search Console API
+    correct: 1
+    ok: 正确——输入 prompt 库，解析出被引用的域名。
+    no: 不存在第一方引用 API——所有追踪工具都通过 prompt 采样。
+  - q: 为什么不该把两个不同 AEO 工具给出的 share of voice（声量占比）拿来对比？
+    options:
+      - 它们跑的是不同的 prompt 集——不可比
+      - 总有一个工具就是错的
+      - share of voice 根本不是真正的指标
+      - Google 禁止这种对比
+    correct: 0
+    ok: 没错——prompt 集不同，所以绝对数字无法对比。
+    no: 在各自的 prompt 上两个工具都可能是“对的”；问题是 prompt 集不一样。
+  - q: Search Console API 能给你而 AEO proxy 给不了的是什么？
+    options:
+      - 来自 Google 自己日志的真实 impressions（曝光）/clicks（点击）/position（排名）
+      - 你在 ChatGPT 里被引用的精确次数
+      - 保证排名第一
+      - 竞争对手的 API key
+    correct: 0
+    ok: 正确——来自 Google 自己日志的 impressions/clicks/position。
+    no: 那是 Google 记录的搜索数据——不是 AI 引用，也不是排名。
+primarySource:
+  url: https://developers.google.com/webmaster-tools/v1/searchanalytics/query
+  label: '《Search Analytics: query》——Search Console API 参考文档'
+  minutes: 12
+  note: >-
+    确切的请求体以及你拿回的那些行数据——这就是你经典搜索这一侧的 ground-truth（真实基准）数据源。从 <a href="https://developers.google.com/webmaster-tools/about">API
+    概览</a> 开始。AEO 这一侧，参见 <a href="https://ahrefs.com/blog/chatgpt-visibility-tracking/">Ahrefs
+    的 ChatGPT 可见性指南</a> 里的 proxy（代理指标）方法讲解，以及 <a href="/zh/resources/"><code>RESOURCES.md</code></a> 里关于差距的说明。
+footnotes:
+  - 'RESOURCES.md “Gaps”——没有第一方 AEO API；追踪工具都使用 proxy 采样。'
+  - 'Google，<a href="https://developers.google.com/webmaster-tools/v1/searchanalytics/query">Search Console API — Search Analytics query。</a>'
+  - 'Google，<a href="https://developers.google.com/search/blog/2026/06/gen-ai-performance-reports">《Gen-AI performance reports in Search Console》</a>（UI 报告，尚未开放 API）。'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+import Scoreboard from '../../../components/lesson/Scoreboard.astro';
+
+<p class="recap">回顾 <a href="/zh/lessons/0004-writing-for-retrieval.html">第 0004 课</a>：你让一个页面获得了入选资格（<a href="/zh/lessons/0002-crawlable-vs-indexable.html">0002</a>），给它的事实打上了标注（<a href="/zh/lessons/0003-structured-data.html">0003</a>），并把它的文字塑造成便于 retrieve（检索）的形态（0004）。这一切都是一场赌注。这一课要闭合这个循环——你怎么<em>知道</em>它真的落地了？</p>
+
+<p class="lede">两条管线的衡量方式并不相同，而这道差距就是整个故事。对于经典搜索，Google 通过一个 API 给你 <b>ground truth（真实基准）</b>。对于 AI 答案的 citation（引用），<b>没有任何引擎对外提供这样的接口</b>——所以市面上每一个追踪工具，以及你即将搭建的那个，都是一个 <em>proxy（代理指标）</em>。<sup>[1]</sup></p>
+
+<Callout variant="win" lead="你的收获：">在一组 answer-engine（答案引擎）的回复上运行 `citation_share.py`，得到你的 <em>coverage（覆盖率）</em>（引用了你的 prompt 占比）和 <em>share of voice（声量占比）</em>（你在所有引用中所占的份额）相对于竞争对手的数据——这正是 Profound 和 Ahrefs Brand Radar 在卖的那个 proxy 指标。</Callout>
+
+## 两块记分牌
+
+<TwoCol
+  cols={[
+    {
+      h: '经典搜索 —— 第一方 API',
+      tag: 'seo',
+      body: `<p><b>Google Search Console API。</b>真实的 impressions（曝光）、clicks（点击）、average position（平均排名），以及确切的 query（查询词）——全部来自 Google 自己的日志。<sup>[2]</sup></p><p><code>Web</code> 搜索类型现在已经把来自 AI 功能的流量也算进去了，所以 AI-Overview 的点击已经会显示在这里。</p><p><em>✓ ground truth、可查询、免费</em></p>`,
+    },
+    {
+      h: 'AI 引用 —— 没有 API',
+      tag: 'aeo',
+      body: `<p>没有任何 OpenAI / Anthropic / Perplexity / Google 的接口能回答“我的站点被引用了多少次？”。Google 2026 年 6 月的 gen-AI 报告只是 Console 里的一个 <em>UI</em> 视图，还没进入 API。<sup>[3]</sup></p><p>所以你只能采样：跑一套 prompt（提示词）库，解析里面的 citation（引用），统计。</p><p><em>✗ 只有 proxy——合成的，不是真实流量</em></p>`,
+    },
+  ]}
+/>
+
+## 经典这一侧：直接调用 API
+
+这是个已经解决了的问题——先认证，然后 `POST` 一个日期区间和你想要的维度。没有工具需要搭建；平台本身就是工具。
+
+```http
+# Search Console: top queries by clicks, last 28 days
+POST https://www.googleapis.com/webmasters/v3/sites/{siteUrl}/searchAnalytics/query
+{
+  "startDate": "2026-05-20", "endDate": "2026-06-17",
+  "dimensions": ["query"],
+  "rowLimit": 100
+}
+# -> rows of { keys:[query], clicks, impressions, ctr, position }
+```
+
+按计划定时拉取它，把这些行存起来，你就有了随时间变化的排名/曝光/点击趋势——任何 SEO 监控系统的骨干。
+
+## AEO 这一侧：你要搭建的 proxy
+
+因为没有 ground truth，每一个商用 AEO 追踪工具都做同样的三步——`tools/citation_share.py` 也是如此：
+
+| 步骤 | 它是什么 | 谁负责 |
+|------|-----------|-------------|
+| 1 · prompt 库 | 你所在领域里一组固定的买家问题 | 你（API key + prompt） |
+| 2 · 跑引擎 | 把每个 prompt 发出去，捕获回复 + 被引用的链接 | 你（一次 API 调用） |
+| 3 · 解析并打分 | 提取被引用的域名 → coverage + share of voice | `citation_share.py` |
+
+第二个辅助脚本 `tools/build_prompts.py` 负责第 1 步：它把那套买家问题 prompt 库组装出来——来自一次 LLM fan-out（扇出）或你的 Search Console 行数据——并且采用 `citation_share.py` 正好能消费的形态。这个工具就是那个离线、可测试的核心。它对 <em>被引用的链接</em>（AEO 里相当于排名的东西）打分，而不是对单纯的品牌提及打分：
+
+```python
+# coverage = prompts that cite me; SOV = my citations / all citations
+cited = cited_domains(entry)          # links in response + citations[]
+hit   = bool(cited & my_domains)
+sov   = mine / total_citations
+```
+
+<Callout variant="do" lead="现在就做：">
+
+1. 自检（离线）：`python3 tools/citation_share.py --demo`
+2. 手工做一个很小的 `results.json`——3–4 个买家问题，把从 ChatGPT/Perplexity 拿到的真实答案 + 链接粘进去——然后给它打分：`python3 tools/citation_share.py results.json --domain yourdomain.com`
+3. **下周再跑一次。** 唯一重要的那个数字是你<em>自己 coverage 的趋势</em>——而不是绝对值。
+
+</Callout>
+
+<Scoreboard
+  cmd="python3 tools/citation_share.py results.json --domain myseo.io"
+  heading="AI-citation share — 4 prompts, you = myseo.io"
+  metrics={[
+    { label: 'COVERAGE', value: '50%', note: 'cited in 2/4 prompts' },
+    { label: 'SHARE OF VOICE', value: '33%', note: 'of all citations are yours' },
+  ]}
+  domains={[
+    { count: 3, domain: 'ahrefs.com' },
+    { count: 2, domain: 'myseo.io', you: true },
+    { count: 1, domain: 'moz.com' },
+  ]}
+  prompts={[
+    { hit: true, text: 'best seo audit tool for developers?' },
+    { hit: false, text: 'how to track rankings via api?' },
+    { hit: true, text: 'what is generative engine optimization?' },
+    { hit: false, text: 'cheapest backlink checker?' },
+  ]}
+/>
+
+<Callout variant="gotcha" lead="proxy ≠ ground truth——诚实地读你自己的数字。">你的 prompt 库是<em>你</em>挑选的一个样本，不是引擎真实的 query（查询词）分布，而且答案是非确定性的。所以绝对的 share of voice 没什么意义，两个工具的数字也不可比——它们跑的是不同的 prompt。<sup>[1]</sup>把它当成一次民意调查来对待：一套固定的 prompt 集随时间反复跑，能给出一个可信的<em>趋势</em>；单次跑出来那个醒目的百分比则不能。把 prompt 保持不变，否则你衡量的是你的 prompt，而不是你的站点。</Callout>
+
+<p class="fineprint">要知道的天花板：`citation_share.py` 只统计被引用的<em>链接</em>。“品牌被提及但没有链接”是另一种（更软的）指标；域名匹配很粗糙（没有 public-suffix 列表）。这两点都在工具的 docstring 里被标注为后续可升级的方向。</p>

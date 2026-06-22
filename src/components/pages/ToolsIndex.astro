@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { tools, lessonsFor, slugFor } from '../../data/lessons';
+import { type Lang, localizePath } from '../../i18n/ui';
+
+interface Props { lang?: Lang }
+const { lang = 'en' } = Astro.props;
+const en = lang === 'en';
+
+// lesson num -> /lessons/<slug>.html, in this locale (single source: collection).
+const lessonEntries = await lessonsFor(lang);
+const slugForLesson = (num: string) => {
+  const e = lessonEntries.find((l) => l.data.num === num);
+  return e ? slugFor(e) : '';
+};
+---
+<BaseLayout
+  lang={lang}
+  title={en ? 'Tools — SEO & AEO for builders' : '工具 — 面向开发者的 SEO 与 AEO'}
+  description={en
+    ? 'Eight stdlib-only Python tools, one per lesson: crawl audit, JSON-LD linter, GEO linter, citation tracker, render-gap diff, sitemap/IndexNow, E-E-A-T audit.'
+    : '八个仅用标准库的 Python 工具，每课一个：crawl 审查、JSON-LD linter、GEO linter、citation 追踪、render-gap 对比、sitemap/IndexNow、E-E-A-T 审查。'}
+>
+  <div class="wrap wide">
+    <p class="kicker">{en ? `The toolkit · ${tools.length} scripts` : `工具箱 · ${tools.length} 个脚本`}</p>
+    <h1>{en ? 'Tools' : '工具'}</h1>
+    {en ? (
+      <p class="sub">Stdlib-only Python, no pip install. Each has an offline <code>--demo</code> self-check and a docstring with usage. The lesson teaches the why; the tool is the how.</p>
+    ) : (
+      <p class="sub">仅用标准库的 Python，无需 pip install。每个都带一个离线 <code>--demo</code> 自检和一份写明用法的 docstring。课讲“为什么”，工具是“怎么做”。</p>
+    )}
+
+    {en ? (
+      <p style="font-size:.92rem; color:var(--muted)">
+        All live in <code>tools/</code> in the repo. Each splits a network/UI edge from
+        an offline, testable core — so the logic is verifiable without hitting the wire.
+      </p>
+    ) : (
+      <p style="font-size:.92rem; color:var(--muted)">
+        全部位于仓库的 <code>tools/</code> 目录。每个都把网络/界面这层边界与一个离线、可测的核心拆开——
+        因此逻辑无需联网即可验证。
+      </p>
+    )}
+
+    {tools.map((t) => (
+      <div style="border:1px solid var(--rule); border-radius:.6rem; background:#fff; padding:1rem 1.1rem; margin:1rem 0">
+        <div style="display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap">
+          <code style="font-size:1.02rem; background:var(--seobg); color:var(--seo)">{t.name}</code>
+          <a style="font-size:.78rem; color:var(--muted)" href={localizePath(`/lessons/${slugForLesson(t.lesson)}`, lang)}>{en ? `from Lesson ${t.lesson} →` : `来自第 ${t.lesson} 课 →`}</a>
+        </div>
+        <p style="margin:.5rem 0 .6rem; font-size:.94rem; color:#333">{t.desc[lang]}</p>
+        <pre><code>$ {t.run}</code></pre>
+      </div>
+    ))}
+  </div>
+</BaseLayout>

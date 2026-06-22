@@ -1,10 +1,11 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Quiz from '../components/lesson/Quiz.astro';
+import { type Lang, useTranslations, localizePath } from '../i18n/ui';
 
 // Renders a lesson: the site shell (via BaseLayout) + a narrow reading column,
 // with the structured tail — quiz, primary source, ask box, pager, footnotes —
-// rendered once from frontmatter (ADR 0002), not authored per lesson.
+// rendered once from frontmatter (ADR 0002), localized per locale (ADR 0003).
 interface Props {
   data: {
     num: string;
@@ -18,14 +19,22 @@ interface Props {
     footnotes: string[];
   };
   next?: { slug: string; title: string } | null;
+  lang?: Lang;
   canonical?: string;
 }
-const { data, next, canonical } = Astro.props;
+const { data, next, lang = 'en', canonical } = Astro.props;
+const t = useTranslations(lang);
 const ps = data.primarySource;
+const pageTitle =
+  lang === 'zh'
+    ? `第 ${data.num} 课 · ${data.title}`
+    : `Lesson ${data.num} · ${data.title}`;
+const minutes = ps.minutes ? ` (≈${ps.minutes} ${t('lesson.primary.min')})` : '';
 ---
 <BaseLayout
-  title={`Lesson ${data.num} · ${data.title}`}
+  title={pageTitle}
   description={data.blurb}
+  lang={lang}
   canonical={canonical}
 >
   <article class="wrap lesson">
@@ -35,32 +44,26 @@ const ps = data.primarySource;
 
     <slot />
 
-    <Quiz questions={data.quiz} heading={data.quizHeading} />
+    <Quiz questions={data.quiz} heading={data.quizHeading} lang={lang} />
 
     <div class="primary">
-      <div class="ttl">
-        Primary source — read this next{ps.minutes ? ` (≈${ps.minutes} min)` : ''}
-      </div>
+      <div class="ttl">{t('lesson.primary.title')}{minutes}</div>
       <a href={ps.url}>{ps.label}</a>
       <p class="pnote">{ps.note}</p>
     </div>
 
-    <div class="ask">
-      <b>Stuck or curious?</b> This agent is your teacher. Ask it anything — “show
-      me a real robots.txt”, “do Claude and Perplexity retrieve differently?” —
-      followups are the fastest way to learn.
-    </div>
+    <div class="ask" set:html={t('lesson.ask.html')} />
 
     <nav class="lesson-nav">
-      <a href="/lessons/">← All lessons</a>
+      <a href={localizePath('/lessons/', lang)}>{t('lesson.nav.all')}</a>
       {next && (
-        <span class="next">Next: <a href={`/lessons/${next.slug}`}>{next.title}</a> →</span>
+        <span class="next">{t('lesson.nav.next')} <a href={localizePath(`/lessons/${next.slug}`, lang)}>{next.title}</a> →</span>
       )}
     </nav>
 
     {data.footnotes.length > 0 && (
       <footer class="footnotes">
-        Lesson {data.num} · SEO/AEO for builders.<br />
+        {lang === 'zh' ? `第 ${data.num} 课 · ` : `Lesson ${data.num} · `}{t('lesson.footer.tail')}<br />
         <Fragment set:html={data.footnotes.map((f, i) => `[${i + 1}] ${f}`).join(' &nbsp; ')} />
       </footer>
     )}
@@ -72,7 +75,7 @@ const ps = data.primarySource;
   .primary .ttl { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--seo); font-weight: 600; margin-bottom: 0.3rem; }
   .primary .pnote { margin: 0.4rem 0 0; font-size: 0.9rem; color: #555; }
   .ask { background: #eef4ee; border: 1px solid #cfe0cf; border-radius: 0.5rem; padding: 0.8rem 1rem; margin-top: 1.6rem; font-size: 0.92rem; }
-  .ask b { color: var(--good); }
+  .ask :global(b) { color: var(--good); }
   .lesson-nav { margin-top: 2.4rem; font-size: 0.92rem; display: flex; gap: 1.2rem; flex-wrap: wrap; }
   .footnotes { margin-top: 2.6rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--muted); }
 </style>

@@ -1,0 +1,153 @@
+---
+num: '0007'
+title: Sitemap + IndexNow
+kicker: 第 0007 课 · 告诉引擎你改了什么
+sub: >-
+  发布一个页面只完成了一半的工作。另一半是 ping（推送/通知）：一种机制让每个引擎按各自缓慢的节奏自行拉取，另一种则即时推送——推给除
+  Google 之外的所有引擎。
+blurb: >-
+  被动发现（passive，一份每个引擎都会自行拉取的 sitemap）对比主动推送（active，IndexNow——即时、共享，且被 Google
+  忽略）。
+quizHeading: ping 自检
+quiz:
+  - q: 哪个引擎忽略 IndexNow，转而依赖 sitemap 加上自己的抓取（crawl）节奏？
+    options: [Bing, Yandex, Google, 它们都同等支持]
+    correct: 2
+    ok: 对——Google 从未采纳 IndexNow；它使用 sitemap 加上自己的节奏。
+    no: Bing、Yandex、Naver 和 Seznam 都接受 IndexNow——不接受的那个是 Google。
+  - q: sitemap 和 IndexNow 的核心区别是什么？
+    options:
+      - sitemap 是 XML，IndexNow 是 YAML
+      - sitemap = 引擎拉取的被动列表；IndexNow = 你发送的主动推送
+      - IndexNow 能提升排名；sitemap 不能
+      - 它们是同一个东西的两个名字
+    correct: 1
+    ok: 正确——被动拉取对比主动推送，这就是全部的区别。
+    no: '格式不是重点：sitemap = 被拉取的被动列表；IndexNow = 被发送的主动推送。'
+  - q: 为什么 IndexNow 的 key（密钥）必须放在你站点根目录的一个文件里？
+    options:
+      - 这样引擎才能在信任这次推送之前确认你拥有该 host
+      - 为了压缩 urlList
+      - 因为 Google 要求这样
+      - 为了设置 lastmod 日期
+    correct: 0
+    ok: 是的——这个 key 文件证明了 host 归属权，和 robots.txt 是同一套信任模型。
+    no: 这是 host 验证——引擎会抓取该 key 文件来确认你拥有这个站点。
+  - q: 你的单个 sitemap 刚刚超过了 50,000 个 URL。规范接下来要求你做什么？
+    options:
+      - 改用 IndexNow
+      - 删除最旧的那些 URL
+      - 什么都不用做——5 万只是个建议
+      - 拆分它并添加一个 sitemap index（一份关于多个 sitemap 的 sitemap）
+    correct: 3
+    ok: 正确——拆分成多个 sitemap，并在一个 sitemap index 里引用它们。
+    no: 超过 50,000 个 URL 后，规范要求拆分并加上一个 sitemap index。
+primarySource:
+  url: https://www.sitemaps.org/protocol.html
+  label: '"The Sitemap protocol" — sitemaps.org'
+  minutes: 12
+  note: >-
+    权威规范：各种标签、50,000 URL / 50 MB 上限、W3C 日期（W3C date）格式、单 host
+    规则。配合 Google 的 <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap">"Build
+    and submit a sitemap"</a> 了解提交方式，以及 <a href="https://www.indexnow.org/documentation">IndexNow protocol docs</a>（key
+    + payload 载荷）。Google 不参与这件事，在 <a href="/zh/resources/">RESOURCES</a> 中有跟踪记录。
+footnotes:
+  - 'sitemaps.org，<a href="https://www.sitemaps.org/protocol.html">"The Sitemap protocol"</a> —— 每个文件 50,000 个 URL / 50 MB，loc 必填，W3C 日期，单 host。'
+  - 'IndexNow，<a href="https://www.indexnow.org/documentation">protocol docs</a> —— POST host/key/keyLocation/urlList，每次推送 ≤10,000 个 URL，与所有参与的引擎共享。'
+  - 'Google 不参与 IndexNow（2026 年 6 月核实）；它使用 sitemap 加上自己的抓取调度，Indexing API 仅限 JobPosting/直播。参见 RESOURCES。'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+
+<p class="recap">回顾 <a href="/zh/lessons/0006-the-js-rendering-gap.html">第 0006 课</a>：我们确认了你的内容确实<em>存在于</em>服务器发送的 HTML 之中。现在页面存在了，也能渲染了。但引擎仍然必须<em>发现</em>它的存在，或它发生了变更。这一发现步骤本身就是管线中的一个阶段——而且是整门课里最容易自动化的一个。</p>
+
+<p class="lede">两种通知机制，而它们之间的不对称正是本课的重点。<b>sitemap</b> 是<em>被动的</em>（passive）：一份你的 URL 列表，引擎想拉就拉——慢，但通用，连 Google 也包括在内。<b>IndexNow</b> 是<em>主动的</em>（active）：你 POST 变更过的 URL，参与的引擎会在几分钟内抓取，然后彼此之间共享这次 ping。<sup>[2]</sup> 问题在于：<b>Google 不参与 IndexNow</b>——它依赖自己的抓取调度加上你的 sitemap。<sup>[3]</sup> 所以一条真正的发布管线（publish pipeline）两者都会触发。</p>
+
+<Callout variant="win" lead="你的收获：">`sitemap_ping.py` 能从一份 URL 列表<em>生成</em>一个符合规范的 `sitemap.xml`，对照 sitemaps.org 的真实上限<em>校验</em>一个现有文件，并<em>构建</em>一个正确的 IndexNow payload（key + keyLocation + urlList）——正是一个发布钩子应该发起的那两次调用。</Callout>
+
+## 谁听谁的
+
+| 机制 | Google | Bing / Yandex / Naver / Seznam | 速度 |
+|-----------|--------|--------------------------------|-------|
+| **`sitemap.xml`**（被动拉取） | 是 | 是 | 慢——按引擎自己的节奏 |
+| **IndexNow**（主动推送） | 否——忽略它<sup>[3]</sup> | 是——所有引擎共享<sup>[2]</sup> | 几分钟 |
+
+为什么开发者要关心那些被 Google 冷落的引擎：其中好几个为 <em>AI</em> 答案供料（Bing 的索引就支撑着 Copilot 等产品），所以一次即时的 IndexNow 推送在某种程度上是一步 <span class="tag aeo">AEO</span> 发现动作，而不只是经典 SEO。
+
+<TwoCol
+  cols={[
+    {
+      h: 'sitemap.xml —— 被动列表',
+      tag: 'seo',
+      body: `一个文件，≤ <b>50,000 个 URL</b> 且未压缩 ≤ <b>50 MB</b>。必填标签：<code>&lt;loc&gt;</code>。可选 <code>&lt;lastmod&gt;</code>（W3C 日期）。<sup>[1]</sup><br /><br />所有 URL 必须位于<b>同一个 host</b>。通过 Search Console 或 <code>robots.txt</code> 提交一次；之后由 Google 按自己的节奏重新抓取。<br /><br /><em>✓ 通用 · ✗ 慢，没有"它变了！"的信号</em>`,
+    },
+    {
+      h: 'IndexNow —— 主动推送',
+      tag: 'aeo',
+      body: `向端点 POST <code>{host, key, keyLocation, urlList}</code>，每次调用 ≤ <b>10,000 个 URL</b>。<sup>[2]</sup><br /><br />key = 8–128 个字符 <code>[a-zA-Z0-9-]</code>，托管在你根目录下的一个文本文件里，这样引擎才能验证你拥有该站点。<br /><br /><em>✓ 即时 + 共享 · ✗ 不含 Google</em>`,
+    },
+  ]}
+/>
+
+## 工具：构建、校验、推送
+
+这两半都是纯数据转换——非常适合放进一个发布钩子里，而且可以离线测试。IndexNow 这一侧会在任何数据真正触网<em>之前</em>就把一切校验完毕：
+
+```text
+# IndexNow payload is built + checked offline; --send is the only network call
+key matches  ^[A-Za-z0-9-]{8,128}$     # or it's rejected
+all URLs share one host                # keyLocation must be on it too
+<= 10,000 URLs per post
+# sitemap side: well-formed, <=50k URLs, <=50MB, one host, valid lastmod
+```
+
+生成的那个 `sitemap.xml` 是纯粹符合规范的 XML——每个 URL 一个 `<loc>`，可选的 `<lastmod>`，全都在同一个 host 上：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://yoursite.com/new-page</loc>
+    <lastmod>2026-06-22</lastmod>
+  </url>
+</urlset>
+```
+
+……而 IndexNow 的试运行（dry run）会在任何 `--send` 之前打印出准确的 POST 请求体：
+
+```json
+{
+  "host": "yoursite.com",
+  "key": "a1b2c3d4e5f6a7b8",
+  "keyLocation": "https://yoursite.com/a1b2c3d4e5f6a7b8.txt",
+  "urlList": ["https://yoursite.com/new-page"]
+}
+```
+
+<Callout variant="do" lead="现在就做：">
+
+1. 自检（离线）：`python3 tools/sitemap_ping.py --demo`
+2. 做一个 `urls.txt`（每行一个 URL，可选地加一个 tab + lastmod），生成并校验：`python3 tools/sitemap_ping.py gen urls.txt > sitemap.xml`，然后 `python3 tools/sitemap_ping.py check sitemap.xml`
+3. 构建一次 IndexNow 推送（试运行——会打印出 key 文件那一步以及准确的 POST 请求体）：`python3 tools/sitemap_ping.py indexnow https://yoursite.com/new-page --key <your-key>`
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/sitemap_ping.py check sitemap.xml"
+  heading="Sitemap check"
+  rows={[
+    { mark: 'PASS', label: 'well-formed XML' },
+    { mark: 'PASS', label: 'root is <urlset>' },
+    { mark: 'PASS', label: 'every <url> has a <loc>  (412 urls)' },
+    { mark: 'PASS', label: '<= 50,000 URLs  (412)' },
+    { mark: 'PASS', label: '<= 50 MB uncompressed' },
+    { mark: 'FAIL', label: 'all URLs share one host  (site.com, cdn.site.com)' },
+    { mark: 'FAIL', label: "lastmod dates valid (W3C)  (2 bad: ['19/06/2026'])" },
+  ]}
+  verdict="2 problem(s) — engines may reject it."
+/>
+
+<Callout variant="gotcha" lead="三个管线陷阱。">（1）<b>IndexNow ≠ Google。</b>向 IndexNow 推送后却看到 Google 那边毫无动静，这是预料之中的——Google 从未采纳它。<sup>[3]</sup> Google 唯一的推送 API 是 <em>Indexing API</em>，仅限 `JobPosting` 和直播页面；其他一切都走 sitemap + 抓取调度，外加 Search Console 里手动的"请求编入索引"（Request indexing）。（2）<b>key 文件必须真的可以访问到</b>，位于 `keyLocation` 处并且包含那个 key，否则每次推送都会被拒绝——和 `robots.txt` 是同一套信任模型。（3）<b>sitemap 是发现手段，不是排名杠杆。</b>列出一个 URL 能让它被<em>找到</em>；至于它能否排名或被引用，sitemap 起不到任何作用。别指望单靠 sitemap 带来流量。</Callout>
+
+<p class="fineprint">需要知道的上限：`sitemap_ping.py` 写的是单个 sitemap；超过 5 万个 URL 时你就需要一个 <em>sitemap index</em>（一份关于多个 sitemap 的 sitemap）——工具里把它标注为下一步升级项。它默认让 IndexNow 走试运行；`--send` 是唯一会触网的那一行。</p>

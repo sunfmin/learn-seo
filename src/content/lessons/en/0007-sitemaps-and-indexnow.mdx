@@ -57,9 +57,9 @@ footnotes:
   - 'IndexNow, <a href="https://www.indexnow.org/documentation">protocol docs</a> — POST host/key/keyLocation/urlList, ≤10,000 URLs/post, shared with all participating engines.'
   - 'Google does not participate in IndexNow (verified June 2026); it uses sitemaps + its own crawl scheduling, with the Indexing API limited to JobPosting/livestream. See RESOURCES.'
 ---
-import Callout from '../../components/lesson/Callout.astro';
-import Runbox from '../../components/lesson/Runbox.astro';
-import TwoCol from '../../components/lesson/TwoCol.astro';
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
 
 <p class="recap">Recap from <a href="/lessons/0006-the-js-rendering-gap.html">Lesson 0006</a>: we made sure your content is actually <em>in</em> the HTML the server sends. Now the page exists and renders. But an engine still has to <em>find out</em> it exists, or changed. That discovery step is its own pipeline stage — and it's the most automatable one in the whole course.</p>
 

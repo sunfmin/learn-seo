@@ -60,10 +60,10 @@ footnotes:
   - 'Google, <a href="https://developers.google.com/search/docs/fundamentals/how-search-works">"In-depth guide to how Google Search works"</a> — renders + runs JS "using a recent version of Chrome."'
   - 'RESOURCES.md "Gaps" — no stable spec for AI-crawler controls; trackers/crawlers commonly fetch raw HTML.'
 ---
-import Callout from '../../components/lesson/Callout.astro';
-import Pipeline from '../../components/lesson/Pipeline.astro';
-import Runbox from '../../components/lesson/Runbox.astro';
-import TwoCol from '../../components/lesson/TwoCol.astro';
+import Callout from '../../../components/lesson/Callout.astro';
+import Pipeline from '../../../components/lesson/Pipeline.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
 
 <p class="recap">Recap from <a href="/lessons/0002-crawlable-vs-indexable.html">Lesson 0002</a>: you ran `crawl_audit.py` and it said "crawlable + indexable." But that tool fetches with `urllib` — it reads the <em>raw</em> response and never runs a line of JS. So does the page it blessed actually <em>contain</em> anything? This lesson finds the gap.</p>
 
