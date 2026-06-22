@@ -1,0 +1,26 @@
+---
+// REQUIRED / RECOMMENDED pills for Lesson 0003's property table. Mirrors the
+// original .pill.req (red) / .pill.rec (olive) badges; a component so it can sit
+// in prose and markdown-table cells without an inline style.
+interface Props {
+  kind: 'req' | 'rec';
+  /** override the text; defaults to REQUIRED / RECOMMENDED */
+  label?: string;
+}
+const { kind, label } = Astro.props;
+const text = label ?? (kind === 'req' ? 'REQUIRED' : 'RECOMMENDED');
+---
+<span class:list={['pill', kind]}>{text}</span>
+<style>
+  .pill {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 1rem;
+    vertical-align: middle;
+  }
+  .req { background: #f7e3df; color: var(--bad); }
+  .rec { background: #eef0e6; color: #6a6a3a; }
+</style>

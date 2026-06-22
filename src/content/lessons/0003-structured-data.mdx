@@ -1,0 +1,135 @@
+---
+num: '0003'
+title: Structured Data
+kicker: Lesson 0003 · Serve + Retrieve stages
+sub: 'Stop making machines parse your prose. Hand them the fact, already labelled.'
+blurb: >-
+  JSON-LD that earns rich results and feeds machines your facts. Required vs
+  recommended properties, validated.
+quizHeading: Check yourself
+quiz:
+  - q: Which structured-data format does Google recommend?
+    options: [JSON-LD, CSV, YAML, TOML]
+    correct: 0
+    ok: Right — JSON-LD is Google's recommended format.
+    no: Google recommends JSON-LD; the others aren't used here.
+  - q: Structured data most directly helps which two pipeline stages?
+    options:
+      - Serve and Retrieve stages
+      - Crawl and Index stages
+      - Rank and Crawl stages
+      - Index and Serve stages
+    correct: 0
+    ok: Yes — rich results (Serve) and clean extraction (Retrieve).
+    no: It feeds Serve (rich results) and Retrieve (extraction).
+  - q: A <em>required</em> property is missing from your Product markup. Consequence?
+    options:
+      - the rich result is blocked
+      - only a warning, still valid
+      - the whole page goes noindex
+      - the crawler skips this page
+    correct: 0
+    ok: Correct — a missing required property blocks the rich result.
+    no: Missing a required property blocks the rich result, nothing else.
+  - q: Why are <code>FAQPage</code> question/answer pairs strong for AEO?
+    options:
+      - each pair is an extractable answer
+      - the pairs raise page rank directly
+      - the pairs replace crawling entirely now
+      - the pairs block competitor citations completely
+    correct: 0
+    ok: Correct — a Q&A pair is a ready-made answer to cite.
+    no: Structured data doesn't directly move rank — it aids extraction.
+primarySource:
+  url: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
+  label: '"Intro to structured data markup in Google Search" — Google Search Central'
+  minutes: 12
+  note: >-
+    Formats, where to put it, and the per-type requirement lists your linter
+    mirrors. Pair with <a href="https://schema.org/docs/gs.html">schema.org
+    Getting Started</a>. Full list in <a href="/resources/"><code>RESOURCES.md</code></a>.
+footnotes:
+  - 'Google, "Intro to structured data" (JSON-LD recommended).'
+  - 'Aggarwal et al., <a href="https://arxiv.org/abs/2311.09735">GEO (arXiv:2311.09735)</a>.'
+  - 'Google, <a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">"Optimizing for generative AI features."</a>'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Runbox from '../../components/lesson/Runbox.astro';
+import TwoCol from '../../components/lesson/TwoCol.astro';
+import Pill from '../../components/lesson/Pill.astro';
+
+<p class="recap">Recap from <a href="/lessons/0002-crawlable-vs-indexable.html">Lesson 0002</a>: your page is now crawlable and indexable. That gets it <em>into</em> the system. Structured data is the first lever that makes it stand out — and it's the first thing that serves <b>both</b> pipelines at once.</p>
+
+<p class="lede">Structured data is machine-readable markup you embed in a page that says, explicitly, "this is a Product, its price is 29 USD, it's in stock." No NLP guesswork. Google recommends one format: <b>JSON-LD</b> — a `<script>` block of JSON, decoupled from your visible HTML.<sup>[1]</sup></p>
+
+<Callout variant="win" lead="Your win:">generate valid JSON-LD for a page and lint it against Google's required-property rules — catching "this won't earn a rich result" <em>before</em> you ship, not weeks later in Search Console.</Callout>
+
+## Prose vs. labelled fact
+
+What a crawler sees in prose: *"Our Acme Widget Pro is available now for just twenty-nine dollars…"* — an engine must <b>infer</b>: is that a product? a price? which currency? Is it in stock? Maybe right, maybe not. The same fact as JSON-LD leaves nothing to guess:
+
+```json
+{
+  "@type": "Product",
+  "name": "Acme Widget Pro",
+  "offers": {
+    "price": "29.00",
+    "priceCurrency": "USD",
+    "availability": "InStock"
+  }
+}
+```
+
+## Why it serves both pipelines
+
+<TwoCol
+  cols={[
+    {
+      h: 'Serve · classic search',
+      tag: 'seo',
+      body: '<p>Eligible for <b>rich results</b> — star ratings, prices, FAQ drop-downs right on the SERP. More space, more clicks.</p>',
+    },
+    {
+      h: 'Retrieve · answer engines',
+      tag: 'aeo',
+      body: '<p>An LLM retrieving your page gets a <b>pre-extracted, unambiguous fact</b> to quote and cite — instead of risking a misread of your prose.<sup>[2]</sup></p>',
+    },
+  ]}
+/>
+
+<p class="fineprint">Reality check: Google says structured data is <em>not</em> a magic AEO trick and there's no special "AI markup" — clean structured data simply makes your existing content easier for any machine to use.<sup>[3]</sup> That's the honest version, and it's enough.</p>
+
+## Required vs. recommended
+
+Every type has properties Google marks <Pill kind="req" /> (miss one → no rich result at all) and <Pill kind="rec" /> (skip → still valid, just less rich). Knowing which is which is the whole game — and exactly what a linter automates.
+
+| Type | What it needs |
+|------|---------------|
+| `FAQPage` | <Pill kind="req" /> `mainEntity` → each `Question` needs `name` + `acceptedAnswer.text` |
+| `Product` | <Pill kind="req" /> `name`, and in `offers`: `price` + `priceCurrency` |
+| `Article` | <Pill kind="rec" /> `headline`, `image`, `datePublished`, `author` |
+
+## The skill: generate & lint with a script
+
+In this workspace: `tools/schema_tool.py` — stdlib only. It emits a copy-paste sample for a type and lints any JSON-LD file against the rules above.
+
+<Callout variant="do" lead="Do this now:">
+
+1. Self-check: `python3 tools/schema_tool.py --demo`
+2. Get markup you can paste into a page `<head>`: `python3 tools/schema_tool.py sample FAQPage`
+3. Break it on purpose — save a Product JSON-LD with no `name`, then `python3 tools/schema_tool.py lint bad.json` → watch it flag the <b>ERROR</b>.
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/schema_tool.py lint bad.json"
+  heading="Linting JSON-LD: @type = Product"
+  rows={[
+    { mark: 'FAIL', label: 'Product missing required property: name' },
+    { mark: 'WARN', label: 'Product missing recommended property: image' },
+    { mark: 'WARN', label: 'Product missing recommended property: offers' },
+  ]}
+  verdict="INVALID — 1 error(s) block the rich result."
+/>
+
+<p class="fineprint">Ceiling: this linter encodes Google's rules for 3 types, not the full schema.org vocabulary. Before shipping production markup, confirm with Google's official <a href="https://search.google.com/test/rich-results">Rich Results Test</a> and the <a href="https://validator.schema.org/">schema.org validator</a>. Your script is the fast inner loop; theirs is the source of truth.</p>

@@ -1,0 +1,41 @@
+---
+// Side-by-side comparison cards (buried vs answer-first, SSR vs CSR, passive vs
+// active, two scoreboards…). Shared across lessons (ADR 0002). Header bar is
+// coloured by `tag`; `h` and `body` are raw HTML via set:html. Body may include
+// caption spans: .lift (muted italic) or .tagline.good/.bad (green/red).
+interface Col {
+  h: string;
+  tag?: 'seo' | 'aeo' | 'both';
+  body: string;
+}
+interface Props {
+  cols: Col[];
+}
+const { cols } = Astro.props;
+---
+<div class="twocol">
+  {cols.map((c) => (
+    <div class:list={['col', c.tag ?? 'both']}>
+      <div class="ch" set:html={c.h} />
+      <div class="cb" set:html={c.body} />
+    </div>
+  ))}
+</div>
+<style>
+  .twocol { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.4rem 0; }
+  .col { flex: 1 1 17rem; border: 1px solid var(--rule); border-radius: 0.5rem; overflow: hidden; background: #fff; }
+  .ch {
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 600; padding: 0.5rem 0.8rem; color: #fff;
+  }
+  .col.seo .ch { background: var(--seo); }
+  .col.aeo .ch { background: var(--aeo); }
+  .col.both .ch { background: var(--term); }
+  .cb { padding: 0.7rem 0.85rem; font-size: 0.9rem; line-height: 1.5; }
+  .cb :global(p) { margin: 0.45rem 0; }
+  .cb :global(p:first-child) { margin-top: 0; }
+  .cb :global(.lift) { display: block; margin-top: 0.5rem; font-size: 0.78rem; color: var(--muted); font-style: italic; }
+  .cb :global(.tagline) { display: block; margin-top: 0.5rem; font-size: 0.78rem; font-style: italic; }
+  .cb :global(.tagline.good) { color: var(--good); }
+  .cb :global(.tagline.bad) { color: var(--bad); }
+</style>
