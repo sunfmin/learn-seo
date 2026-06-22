@@ -4,8 +4,10 @@ import LessonLayout from '../../layouts/LessonLayout.astro';
 
 export async function getStaticPaths() {
   const entries = await getCollection('lessons');
-  // slug carries `.html` so the URL stays /lessons/<id>.html (ADR 0002).
-  return entries.map((entry) => ({ params: { slug: `${entry.id}.html` }, props: { entry } }));
+  // `.html` is in the route FILENAME ([slug].html.astro), so the URL stays
+  // /lessons/<id>.html in both dev and build (ADR 0002). Keeping it in the slug
+  // param instead 404s in dev — Astro reads the extension as a static asset.
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
