@@ -1,0 +1,38 @@
+---
+// The dark terminal "tool output" box — the HTML twin of what seolib.checklist
+// prints (rows of status · label, then a verdict). Structured props so the
+// answer/verdict lives in one place, not hand-spaced ASCII.
+interface Row {
+  mark: 'PASS' | 'FAIL' | 'WARN';
+  label: string;
+}
+interface Props {
+  cmd: string;
+  heading?: string;
+  rows: Row[];
+  verdict?: string;
+}
+const { cmd, heading, rows, verdict } = Astro.props;
+const rule = '─'.repeat(46);
+const NL = '\n';
+---
+<pre class="runbox"><span class="cmd">$ {cmd}</span>{heading && (<Fragment>{NL}{NL}{heading}{NL}{rule}</Fragment>)}{rows.map((r) => (<Fragment>{NL}<span class={r.mark.toLowerCase()}>[{r.mark}]</span> {r.label}</Fragment>))}{verdict && (<Fragment>{NL}{rule}{NL}VERDICT: {verdict}</Fragment>)}</pre>
+<style>
+  .runbox {
+    background: #101418;
+    color: #cfe8d4;
+    padding: 0.9rem 1.1rem;
+    border-radius: 0.5rem;
+    font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    white-space: pre;
+    overflow: auto;
+    margin: 1rem 0;
+  }
+  .cmd { color: #f0d98a; }
+  .pass { color: #7fd99a; }
+  .fail { color: #e88a7d; }
+  .warn { color: #f0d98a; }
+  @media print { .runbox { background: #f3efe6; color: #222; } }
+</style>

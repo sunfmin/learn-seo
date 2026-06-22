@@ -2,7 +2,7 @@
 // The prose callout — one component, variant drives colour + bold lead-in.
 // Replaces the per-lesson .win / .insight / .gotcha boxes (ADR 0002).
 interface Props {
-  variant?: 'win' | 'insight' | 'gotcha' | 'note';
+  variant?: 'win' | 'insight' | 'gotcha' | 'note' | 'do';
   /** bold lead-in rendered before the body (e.g. "Your win for this lesson:") */
   lead?: string;
 }
@@ -27,4 +27,8 @@ const { variant = 'note', lead } = Astro.props;
   .gotcha { background: #f7ece9; border-left: 3px solid var(--bad); }
   .gotcha .lead { color: var(--bad); }
   .note { background: #f3f1ea; border-left: 3px solid var(--muted); }
+  /* the "Do this now" action box — green, like the ask box */
+  .do { background: #eef4ee; border: 1px solid #cfe0cf; }
+  .do .lead { color: var(--good); }
+  .do :global(code) { background: #dceadc; }
 </style>

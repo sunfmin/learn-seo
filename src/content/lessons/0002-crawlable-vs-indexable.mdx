@@ -1,0 +1,143 @@
+---
+num: '0002'
+title: Crawlable ≠ Indexable
+kicker: Lesson 0002 · Crawl + Index stages
+sub: >-
+  Two separate gates, two separate failure modes. Most "why isn't my page
+  ranking?" bugs die here — before ranking is even in play.
+blurb: >-
+  The two gates a page passes before it can ever rank — and why one is robots.txt
+  and the other is noindex/title/canonical.
+quizHeading: Which gate, which control?
+quiz:
+  - q: A page is blocked in <code>robots.txt</code> but has no <code>noindex</code>. What happens?
+    options:
+      - crawler never fetches the page
+      - page is indexed and ranked
+      - noindex tag is read first
+      - canonical url gets rewritten instead
+    correct: 0
+    ok: Right — robots.txt blocks the fetch entirely.
+    no: Blocked in robots.txt = the bot never fetches it at all.
+  - q: You add <code>noindex</code> to a page that is <em>also</em> listed in your sitemap. Result?
+    options:
+      - the page stays out of index
+      - the sitemap overrides that noindex
+      - robots.txt must also be set
+      - canonical decides which version indexes
+    correct: 0
+    ok: Correct — a read noindex keeps it out, sitemap or not.
+    no: noindex wins; being in a sitemap doesn't force indexing.
+  - q: A page is fully crawlable but never appears in the index. Which stage is blocking it?
+    options: [Crawl, Index, Rank, Serve]
+    correct: 1
+    ok: Yes — it passed Crawl but the Index gate dropped it.
+    no: Crawlable means Crawl passed — the Index gate is blocking.
+  - q: Your script reads the <code>X-Robots-Tag</code> response header to detect…
+    options:
+      - a noindex directive present
+      - the total page load
+      - the canonical target url
+      - inbound backlink count totals
+    correct: 0
+    ok: Correct — X-Robots-Tag can carry noindex in the header.
+    no: X-Robots-Tag carries directives like noindex, not metrics.
+primarySource:
+  url: https://developers.google.com/search/docs/crawling-indexing/block-indexing
+  label: '“Block search indexing with noindex” — Google Search Central'
+  minutes: 10
+  note: >-
+    States the block-vs-noindex trap directly: a blocked page can't have its
+    noindex read. Also see the robots.txt introduction.
+footnotes:
+  - 'Google Search Central, “How Search Works” (separate crawling vs indexing).'
+  - 'Google Search Central, <a href="https://developers.google.com/search/docs/crawling-indexing/block-indexing">“Block search indexing with noindex.”</a>'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Gates from '../../components/lesson/Gates.astro';
+import Runbox from '../../components/lesson/Runbox.astro';
+
+<p class="recap">Recap from <a href="/lessons/0001-the-two-pipelines.html">Lesson 0001</a>: classic search runs <b>crawl → index → rank → serve</b>. Today we zoom into the first two — because a page that fails either can <em>never</em> rank, and as a builder these are the two gates your tooling can check automatically.</p>
+
+<p class="lede">Developers conflate these constantly. "Crawlable" and "indexable" are <b>independent</b>. A page can be perfectly crawlable and still refuse to be indexed. A page can be marked index-me and never get crawled. They are two different gates with two different controls.<sup>[1]</sup></p>
+
+<Callout variant="win" lead="Your win:">run a script that audits any URL through both gates and tells you exactly which one is failing — the tightest possible feedback loop on "can this page even show up?"</Callout>
+
+## The two gates
+
+<Gates
+  gates={[
+    {
+      kind: 'c',
+      badge: 'CRAWL',
+      title: 'Can the bot fetch it?',
+      q: 'Controlled <em>before</em> the page is read.',
+      items: [
+        '<code>robots.txt</code> must <b>allow</b> the path',
+        'URL must return <b>200</b> (not 404 / 5xx / endless redirect)',
+        'must be discoverable (sitemap or a link)',
+      ],
+    },
+    {
+      kind: 'i',
+      badge: 'INDEX',
+      title: 'Will the engine keep it?',
+      q: 'Controlled <em>inside</em> the fetched page.',
+      items: [
+        'no <code>noindex</code> (meta tag <em>or</em> <code>X-Robots-Tag</code> header)',
+        'has real content + a <code>&lt;title&gt;</code>',
+        'a sane <code>canonical</code> (which URL is the "real" one)',
+      ],
+    },
+  ]}
+/>
+
+<Callout variant="gotcha" lead="The trap that breaks everyone:">blocking a page in `robots.txt` does <u>not</u> remove it from the index. If the bot is blocked from crawling, it never <em>reads</em> your `noindex` tag — so to deindex a page you must <b>allow</b> the crawl and serve `noindex`. Block + noindex together = noindex never seen.<sup>[2]</sup> Crawl control and index control point in opposite directions.</Callout>
+
+## The checklist, and what controls each
+
+| Gate | Check | Control lives in |
+|------|-------|------------------|
+| <span class="badge c">CRAWL</span> | Path allowed | `/robots.txt` |
+| <span class="badge c">CRAWL</span> | Returns 200 | HTTP status |
+| <span class="badge i">INDEX</span> | No `noindex` | `<meta name="robots">` or `X-Robots-Tag` header |
+| <span class="badge i">INDEX</span> | Has title | `<title>` in HTML |
+| <span class="badge i">INDEX</span> | Has canonical | `<link rel="canonical">` |
+
+## The skill: audit a URL with a script
+
+You already have it — `tools/crawl_audit.py` in this workspace. Stdlib only, no install. The core: `urllib.robotparser` answers the crawl gate, a tiny HTML parser answers the index gate.
+
+```python
+# the heart of it — robots gate, then index signals
+def robots_allows(url):
+    rp = urllib.robotparser.RobotFileParser()
+    rp.set_url(origin(url) + "/robots.txt")
+    rp.read()
+    return rp.can_fetch("Googlebot", url)   # stdlib does the parsing
+
+# index gate: noindex? title? canonical?  (from the page's <head>)
+```
+
+<Callout variant="do" lead="Do this now —">
+the feedback loop is the lesson:
+
+1. Self-check the parser (offline): `python3 tools/crawl_audit.py --demo`
+2. Audit a page that passes — Google's own docs: `python3 tools/crawl_audit.py https://developers.google.com/search/docs/fundamentals/how-search-works`
+3. **Now audit a page you own.** Then deliberately break it: add `<meta name="robots" content="noindex">` to a test page and watch the INDEX gate flip to FAIL while CRAWL still passes. That contrast *is* the lesson.
+</Callout>
+
+<Runbox
+  cmd="python3 tools/crawl_audit.py https://developers.google.com/search/docs/fundamentals/how-search-works"
+  heading="Audit: https://developers.google.com/.../how-search-works"
+  rows={[
+    { mark: 'PASS', label: 'CRAWL · robots.txt allows the bot' },
+    { mark: 'PASS', label: 'CRAWL · page returns success (200)' },
+    { mark: 'PASS', label: 'INDEX · no noindex directive' },
+    { mark: 'PASS', label: 'INDEX · has a <title>' },
+    { mark: 'PASS', label: 'INDEX · declares a canonical URL' },
+  ]}
+  verdict="crawlable + indexable. (Ranking is a separate fight.)"
+/>
+
+<p class="fineprint">Ceiling to know: this is a <em>static</em> fetch. If a page renders its content with JavaScript, `urllib` won't see it — Google does a second render pass that this script skips. That gap (JS rendering) is a whole lesson later.</p>

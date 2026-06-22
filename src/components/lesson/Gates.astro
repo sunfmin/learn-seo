@@ -1,0 +1,37 @@
+---
+// The two-gate cards for Lesson 0002 (Crawl vs Index). One-off layout, so it
+// lives as its own component with scoped styles rather than polluting global.css.
+interface Gate {
+  kind: 'c' | 'i';
+  badge: string;
+  title: string;
+  q: string;
+  items: string[]; // inline HTML allowed
+}
+interface Props {
+  gates: Gate[];
+}
+const { gates } = Astro.props;
+---
+<div class="gates">
+  {gates.map((g) => (
+    <div class:list={['gate', g.kind]}>
+      <span class:list={['badge', g.kind]}>{g.badge}</span>
+      <h3>{g.title}</h3>
+      <p class="q" set:html={g.q} />
+      <ul>
+        {g.items.map((it) => <li set:html={it} />)}
+      </ul>
+    </div>
+  ))}
+</div>
+<style>
+  .gates { display: flex; gap: 0.8rem; flex-wrap: wrap; margin: 1.6rem 0; }
+  .gate { flex: 1 1 14rem; border: 1px solid var(--rule); border-radius: 0.5rem; padding: 0.9rem 1rem; background: #fff; }
+  .gate h3 { margin: 0.1rem 0 0.3rem; font-size: 1.05rem; }
+  .gate.c { border-top: 3px solid var(--seo); }
+  .gate.i { border-top: 3px solid var(--aeo); }
+  .gate .q { font-size: 0.9rem; color: #555; margin: 0.1rem 0; }
+  .gate ul { margin: 0.5rem 0 0; padding-left: 1.1rem; font-size: 0.9rem; }
+  .gate li { margin: 0.2rem 0; }
+</style>

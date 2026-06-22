@@ -40,6 +40,12 @@ h2{font-size:1.35rem; font-weight:600; margin:2.4rem 0 .6rem; letter-spacing:-.0
 p{margin:.7rem 0}
 .lede{font-size:1.12rem}
 sup{font-size:.7em; color:var(--aeo)}
+/* recap line opening a lesson; badge pills (CRAWL/INDEX etc.) used in prose + tables */
+.recap{font-size:.9rem; color:var(--muted); border-left:3px solid var(--rule); padding:.2rem 0 .2rem .9rem; margin:0 0 1.6rem}
+.badge{font-size:.62rem; font-weight:600; letter-spacing:.1em; padding:.1rem .35rem; border-radius:.3rem}
+.badge.c{background:var(--seobg); color:var(--seo)}
+.badge.i{background:var(--aeobg); color:var(--aeo)}
+.fineprint{font-size:.88rem; color:var(--muted)}
 
 /* pipeline split badge */
 .tag{display:inline-block; font-size:.64rem; font-weight:700; letter-spacing:.1em;
