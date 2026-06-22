@@ -61,6 +61,12 @@ export const tools: Tool[] = [
       zh: '审查一个页面上机器可检测的 E-E-A-T proxy 信号（author、sameAs、日期、publisher、引用来源）。它不是打分——而是找差距。',
     },
     run: 'python3 tools/eeat_audit.py --demo' },
+  { name: 'site_audit.py', lesson: '0009',
+    desc: {
+      en: 'The capstone: crawls a whole site BFS from a seed and runs every gate from 0002–0008 on each page, then rolls findings into one prioritized report (a check failing site-wide = a template bug).',
+      zh: '集大成之作：从一个种子 URL 起按 BFS（广度优先）crawl（抓取）整个站点，对每个页面跑 0002–0008 的所有 gate（关卡），再把结果汇总成一份带优先级的报告（某项检查在全站失败 = 模板 bug）。',
+    },
+    run: 'python3 tools/site_audit.py --demo' },
 ];
 
 /** Tools belonging to a lesson (e.g. the lesson card's "▸ tool" label). */

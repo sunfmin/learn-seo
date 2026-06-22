@@ -1,0 +1,144 @@
+---
+num: '0009'
+title: 全站审查（The Site Audit）
+kicker: 第 0009 课 · 集大成
+sub: >-
+  前八课都只在一个 URL 上检查一个信号。真实站点有几百个页面。像 bot 一样
+  crawl（抓取）它，把所有 gate（关卡）一次性跑完。
+blurb: >-
+  从一个 seed（种子 URL）起按 BFS（广度优先）走遍整站，对每个页面跑 0002–0008 的
+  crawl/index/retrieve 关卡，再把结果汇总成一份带优先级的报告。
+quizHeading: 审查整站，而非单页
+quiz:
+  - q: 审查器靠什么决定要检查<em>哪些</em>页面？
+    options:
+      - BFS，从一个 seed 沿内部链接展开
+      - 它读取你的 CMS 数据库
+      - 它猜常见的 URL 模式
+      - 它永远只检查 seed URL
+    correct: 0
+    ok: 对——它像 bot 那样 crawl：跟随链接、留在本站内。
+    no: 它像 bot 一样 crawl——从 seed 发现内部链接，做 BFS（广度优先）。
+  - q: 为什么这次 crawl 会跳过指向 <code>other-site.com</code> 的链接？
+    options:
+      - 它们不在我们要审查的那个注册域名（registrable domain）上
+      - 外部链接总是坏的
+      - <code>robots.txt</code> 禁止
+      - 它们从不返回 200
+    correct: 0
+    ok: 正确——我们只留在一个 host 上（用 <code>seolib.domain</code>）；别人的站点轮不到我们来审查。
+    no: 这次 crawl 被限定在 seed 自己的域名内——外部 host 不在范围内。
+  - q: 汇总报告说 <code>canonical — 2/3 pages failing</code>。开发者通常的修法是……
+    options:
+      - 一次性修好共享的模板/布局
+      - 逐页手改
+      - 删掉失败的页面
+      - 把它们加进 robots.txt
+    correct: 0
+    ok: 是的——全站性失败是模板 bug；修一次布局，所有页面一起痊愈。
+    no: 一个信号在许多页面上都失败，是模板问题——在一个地方修好它。
+  - q: 审查用 <code>urllib</code>（没有浏览器）抓取每个页面。它会漏掉什么？
+    options:
+      - 只由 JavaScript 渲染出来的内容
+      - HTTP 状态码
+      - <code>&lt;title&gt;</code> 标签
+      - canonical 链接
+    correct: 0
+    ok: 正确——这是静态抓取；由 JS 注入的内容就是第 0006 课的 render gap（渲染缺口）。
+    no: 没有浏览器运行，所以 JS 渲染的内容不可见——即第 0006 课的 render gap。
+primarySource:
+  url: https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+  label: '“SEO Starter Guide: The Basics” — Google Search Central'
+  minutes: 15
+  note: >-
+    Google 自己端到端列出一个站点该做对的事——正是这个集大成工具所审查的那些 gate，
+    来自定义它们的源头。
+footnotes:
+  - 'Google Search Central, “In-depth guide to how Google Search works”（crawl → index → serve）。'
+  - 'Google Search Central, <a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide">“SEO Starter Guide: The Basics.”</a>'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+
+<p class="recap">回顾：第 <a href="/zh/lessons/0002-crawlable-vs-indexable.html">0002</a>–<a href="/zh/lessons/0008-eeat.html">0008</a> 课各自拿一个信号——robots/noindex、title、canonical、structured data（结构化数据）、一个 <code>&lt;h1&gt;</code>、正文篇幅——在<em>单个</em> URL 上检查。那是单元测试。这一课是集成测试。</p>
+
+<p class="lede">真实站点有几百个页面，而出问题的那个信号，很少恰好坏在你随手看的那一页上——它坏在<b>模板（template）</b>里，所以它坏在<em>每一个</em>用了该模板的页面上。要发现这一点，你不能只审查一个 URL。你得像 bot 那样 crawl 整站，并<b>对每个页面把所有 gate 一次性跑完</b>。</p>
+
+<Callout variant="win" lead="本课收获：">把一个脚本指向一个域名，拿回一份逐页清单<em>以及</em>一份全站汇总——“canonical 在 2/3 页面上缺失”——把一个模糊的担忧变成一张排好序的修复清单。</Callout>
+
+## 像 bot 一样 crawl：从 seed 做 BFS
+
+crawler 并没有背下你的 sitemap。它从一个 URL 出发，读取链接，把没见过的排进队列，然后重复——广度优先——并**留在本站内**。两条规则让它守规矩：
+
+- **单一域名。** 只跟随 host 与 seed 一致的链接（用 `seolib.domain`）；跳过站外链接——别人的站点不归你审查。
+- **设上限。** 跑满 N 个页面就停。礼貌的 crawl 是有界的；无界的 crawl 会把你本想帮的服务器锤爆。
+
+```python
+# the heart of it — BFS over internal links, capped
+host = domain(seed)
+seen, out, queue = set(), [], [seed]
+while queue and len(out) < max_pages:
+    url = queue.pop(0)
+    if url in seen: continue
+    seen.add(url)
+    resp = fetch(url, ua="Googlebot")
+    pg = parse(resp.body)                      # one seolib parse → every signal
+    out.append((url, resp, pg))
+    for href in pg.links:
+        nxt = urljoin(url, href)               # relative → absolute
+        if domain(nxt) == host and nxt not in seen:
+            queue.append(nxt)                  # internal + unseen → enqueue
+```
+
+## 每个关卡，每个页面
+
+对每个 crawl 到的页面，跑完整张清单——就是各课工具各自拥有的那些判定，如今汇成一张表：
+
+| 关卡 | 检查 | 最早出现于 |
+|------|------|-----------|
+| <span class="badge c">CRAWL</span> | 页面返回成功（2xx/3xx） | `crawl_audit.py` · 0002 |
+| <span class="badge i">INDEX</span> | 没有 `noindex`（meta 或 `X-Robots-Tag`） | 0002 |
+| <span class="badge i">INDEX</span> | 有 `<title>` | 0002 |
+| <span class="badge i">INDEX</span> | 声明了 `canonical` | 0002 |
+| <span class="badge i">INDEX</span> | 恰好一个 `<h1>` | 结构 · 0004 |
+| <span class="badge i">INDEX</span> | 有 JSON-LD structured data | `schema_tool.py` · 0003 |
+| <span class="badge i">INDEX</span> | 正文篇幅够，能 retrieve（检索）出一个 chunk（块） | `geo_lint.py` · 0004 |
+
+<Callout variant="insight" lead="汇总才是重点：">一个页面没过某项检查，是个笔误。<em>同一项</em>检查在许多页面上都失败，是<b>模板 bug</b>——而那是你手上杠杆率最高的修复，因为改对一个布局文件就能让所有页面一起痊愈。逐页清单找笔误；全站汇总找模板 bug。</Callout>
+
+## 跑起来
+
+<Callout variant="do" lead="现在就做——">
+这个集大成工具把之前每一课都拉进一条命令里：
+
+1. 离线自检（会 crawl 一个内置的 3 页站点）：`python3 tools/site_audit.py --demo`
+2. 审查一个你自己拥有的小型真实站点：`python3 tools/site_audit.py https://your-site.example/`
+3. 读**汇总**，别只看逐页清单。“N/total failing”最高的那项就是你的第一个要修的——它几乎总是模板，而非某个页面。
+</Callout>
+
+<Runbox
+  cmd="python3 tools/site_audit.py https://acme.test/"
+  heading="Site audit: https://acme.test/ (3 pages)"
+  rows={[
+    { mark: 'PASS', label: 'clean      · https://acme.test/' },
+    { mark: 'WARN', label: '2 issue(s) · https://acme.test/pricing' },
+    { mark: 'WARN', label: '6 issue(s) · https://acme.test/blog/x' },
+  ]}
+  verdict="2/3 pages have at least one gate failing — fix worst first."
+/>
+
+<Runbox
+  cmd="# …findings rolled up across the site"
+  rows={[
+    { mark: 'PASS', label: 'CRAWL    · page returns success        all pages OK' },
+    { mark: 'WARN', label: 'INDEX    · no noindex directive        1/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · has a <title>               1/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · declares a canonical        2/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · exactly one <h1>            1/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · has JSON-LD structured data 2/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · enough body text            1/3 pages failing' },
+  ]}
+  verdict="canonical + JSON-LD fail on 2/3 — one template fix clears both."
+/>
+
+<p class="fineprint">要知道的天花板：这是<em>静态</em>抓取（没有浏览器），所以 JS 渲染的内容不可见——即<a href="/zh/lessons/0006-the-js-rendering-gap.html">第 0006 课</a>的 render gap（渲染缺口）。它只走它能找到的链接（orphan pages，孤立页面，需要你的 <a href="/zh/lessons/0007-sitemaps-and-indexnow.html">sitemap</a>）。而且它审查的是机器可检查的信号——而非文笔好不好。地图不是疆域；它只告诉你哪些 gate 是关着的。</p>

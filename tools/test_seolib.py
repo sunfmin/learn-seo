@@ -100,6 +100,31 @@ def test_fetch_and_audit():
     assert d["declares a canonical URL"] is True
 
 
+def test_site_audit_crawl():
+    # site_audit.audit_site driven end-to-end through the fetch seam, no network:
+    # BFS must follow internal links only, and the rollup must flag the bad page.
+    import site_audit
+    home = ('<html><head><title>Home</title><link rel="canonical" href="https://demo.test/">'
+            '</head><body><h1>Home</h1><a href="/p">p</a>'
+            '<a href="https://other.test/x">ext</a></body></html>')
+    p = ('<html><head><meta name="robots" content="noindex"></head>'
+         '<body><h1>a</h1><h1>b</h1><p>thin</p></body></html>')
+    site = {
+        "https://demo.test/": Response(url="https://demo.test/", status=200, body=home),
+        "https://demo.test/p": Response(url="https://demo.test/p", status=200, body=p),
+    }
+    results = site_audit.audit_site(
+        "https://demo.test/",
+        fetcher=lambda url, **kw: fetch(url, transport=fixture(site), **kw),
+        robots_ok=lambda u: True,
+    )
+    assert [u for u, _ in results] == ["https://demo.test/", "https://demo.test/p"]  # external skipped
+    bad = {label: ok for _, label, ok in dict(results)["https://demo.test/p"]}
+    assert bad["no noindex directive"] is False
+    assert bad["has a <title>"] is False
+    assert bad["exactly one <h1>"] is False
+
+
 def main():
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     for name, fn in tests:

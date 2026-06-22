@@ -1,0 +1,144 @@
+---
+num: '0009'
+title: The Site Audit
+kicker: Lesson 0009 · Capstone
+sub: >-
+  Eight lessons checked one signal on one URL. A real site has hundreds of pages.
+  Crawl it like a bot and run every gate at once.
+blurb: >-
+  Walk a whole site BFS-style from a seed, run the crawl/index/retrieve gates from
+  0002–0008 on every page, and roll the findings into one prioritized report.
+quizHeading: Audit the whole site, not one page
+quiz:
+  - q: How does the auditor decide <em>which</em> pages to check?
+    options:
+      - BFS, following internal links from a seed
+      - it reads your CMS database
+      - it guesses common URL patterns
+      - it only ever checks the seed URL
+    correct: 0
+    ok: 'Right — it crawls the way a bot does: follow links, stay on the site.'
+    no: It crawls like a bot — BFS over internal links discovered from the seed.
+  - q: Why does the crawl skip links to <code>other-site.com</code>?
+    options:
+      - they're off the registrable domain we're auditing
+      - external links are always broken
+      - <code>robots.txt</code> forbids it
+      - they never return 200
+    correct: 0
+    ok: Correct — we stay on one host (via <code>seolib.domain</code>); other sites aren't ours to audit.
+    no: The crawl is bounded to the seed's own domain — external hosts are out of scope.
+  - q: The rollup says <code>canonical — 2/3 pages failing</code>. The builder fix is usually to…
+    options:
+      - fix the shared template/layout once
+      - hand-edit each page
+      - delete the failing pages
+      - add them to robots.txt
+    correct: 0
+    ok: Yes — site-wide failures are template bugs; fix the layout once, all pages heal.
+    no: A signal failing across many pages is a template problem — fix it in one place.
+  - q: The audit fetches each page with <code>urllib</code> (no browser). What can it miss?
+    options:
+      - content rendered only by JavaScript
+      - the HTTP status code
+      - the <code>&lt;title&gt;</code> tag
+      - the canonical link
+    correct: 0
+    ok: Correct — it's a static fetch; JS-injected content is the render gap from 0006.
+    no: No browser runs, so JS-rendered content is invisible — the Lesson 0006 render gap.
+primarySource:
+  url: https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+  label: '“SEO Starter Guide: The Basics” — Google Search Central'
+  minutes: 15
+  note: >-
+    Google's own end-to-end list of what a site should get right — the same gates
+    this capstone audits, from the source that defines them.
+footnotes:
+  - 'Google Search Central, “In-depth guide to how Google Search works” (crawl → index → serve).'
+  - 'Google Search Central, <a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide">“SEO Starter Guide: The Basics.”</a>'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+
+<p class="recap">Recap: Lessons <a href="/lessons/0002-crawlable-vs-indexable.html">0002</a>–<a href="/lessons/0008-eeat.html">0008</a> each took one signal — robots/noindex, title, canonical, structured data, an <code>&lt;h1&gt;</code>, body depth — and checked it on a <em>single</em> URL. That's the unit test. This is the integration test.</p>
+
+<p class="lede">A real site is hundreds of pages, and the signal that's broken is rarely broken on the page you happened to look at — it's broken in a <b>template</b>, so it's broken on <em>every</em> page that uses it. To find that, you can't audit one URL. You have to crawl the site the way a bot does and run <b>every gate on every page at once</b>.</p>
+
+<Callout variant="win" lead="Your win:">point one script at a domain and get back a per-page list <em>and</em> a site-wide rollup — “canonical missing on 2/3 pages” — that turns a vague worry into a ranked fix list.</Callout>
+
+## Crawl like a bot: BFS from a seed
+
+A crawler doesn't have your sitemap memorized. It starts at one URL, reads the links, queues the ones it hasn't seen, and repeats — breadth-first — **staying on the site**. Two rules keep it honest:
+
+- **One domain.** Follow links whose host matches the seed (via `seolib.domain`); skip off-site links — other people's sites aren't yours to audit.
+- **A cap.** Stop after N pages. A polite crawl is bounded; an unbounded one hammers the server you're trying to help.
+
+```python
+# the heart of it — BFS over internal links, capped
+host = domain(seed)
+seen, out, queue = set(), [], [seed]
+while queue and len(out) < max_pages:
+    url = queue.pop(0)
+    if url in seen: continue
+    seen.add(url)
+    resp = fetch(url, ua="Googlebot")
+    pg = parse(resp.body)                      # one seolib parse → every signal
+    out.append((url, resp, pg))
+    for href in pg.links:
+        nxt = urljoin(url, href)               # relative → absolute
+        if domain(nxt) == host and nxt not in seen:
+            queue.append(nxt)                  # internal + unseen → enqueue
+```
+
+## Every gate, every page
+
+For each crawled page, run the whole checklist — the same predicates the per-lesson tools owned, now in one table:
+
+| Gate | Check | First seen in |
+|------|-------|---------------|
+| <span class="badge c">CRAWL</span> | page returns success (2xx/3xx) | `crawl_audit.py` · 0002 |
+| <span class="badge i">INDEX</span> | no `noindex` (meta or `X-Robots-Tag`) | 0002 |
+| <span class="badge i">INDEX</span> | has a `<title>` | 0002 |
+| <span class="badge i">INDEX</span> | declares a `canonical` | 0002 |
+| <span class="badge i">INDEX</span> | exactly one `<h1>` | structure · 0004 |
+| <span class="badge i">INDEX</span> | has JSON-LD structured data | `schema_tool.py` · 0003 |
+| <span class="badge i">INDEX</span> | enough body text to retrieve a chunk | `geo_lint.py` · 0004 |
+
+<Callout variant="insight" lead="The rollup is the point:">one page failing a check is a typo. The <em>same</em> check failing across many pages is a <b>template bug</b> — and that's the highest-leverage fix you have, because correcting one layout file heals every page at once. The per-page list finds the typo; the site rollup finds the template bug.</Callout>
+
+## Run it
+
+<Callout variant="do" lead="Do this now —">
+the capstone pulls every prior lesson into one command:
+
+1. Self-check offline (crawls a canned 3-page site): `python3 tools/site_audit.py --demo`
+2. Audit a small real site you own: `python3 tools/site_audit.py https://your-site.example/`
+3. Read the **rollup**, not just the per-page list. The check with the highest “N/total failing” is your first fix — almost always a template, not a page.
+</Callout>
+
+<Runbox
+  cmd="python3 tools/site_audit.py https://acme.test/"
+  heading="Site audit: https://acme.test/ (3 pages)"
+  rows={[
+    { mark: 'PASS', label: 'clean      · https://acme.test/' },
+    { mark: 'WARN', label: '2 issue(s) · https://acme.test/pricing' },
+    { mark: 'WARN', label: '6 issue(s) · https://acme.test/blog/x' },
+  ]}
+  verdict="2/3 pages have at least one gate failing — fix worst first."
+/>
+
+<Runbox
+  cmd="# …findings rolled up across the site"
+  rows={[
+    { mark: 'PASS', label: 'CRAWL    · page returns success        all pages OK' },
+    { mark: 'WARN', label: 'INDEX    · no noindex directive        1/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · has a <title>               1/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · declares a canonical        2/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · exactly one <h1>            1/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · has JSON-LD structured data 2/3 pages failing' },
+    { mark: 'WARN', label: 'INDEX    · enough body text            1/3 pages failing' },
+  ]}
+  verdict="canonical + JSON-LD fail on 2/3 — one template fix clears both."
+/>
+
+<p class="fineprint">Ceilings to know: this is a <em>static</em> fetch (no browser), so JS-rendered content is invisible — the render gap from <a href="/lessons/0006-the-js-rendering-gap.html">Lesson 0006</a>. It walks only links it can find (orphan pages need your <a href="/lessons/0007-sitemaps-and-indexnow.html">sitemap</a>). And it audits machine-checkable signals — not whether the writing is any good. The map is not the territory; it just tells you which gates are shut.</p>
