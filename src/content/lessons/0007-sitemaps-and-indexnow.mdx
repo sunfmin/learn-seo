@@ -1,0 +1,154 @@
+---
+num: '0007'
+title: Sitemaps + IndexNow
+kicker: Lesson 0007 · Telling engines you changed
+sub: >-
+  Publishing a page is half the job. The other half is the ping: one mechanism
+  every engine pulls on its own slow schedule, one that pushes instantly — to
+  everyone except Google.
+blurb: >-
+  Passive discovery (a sitemap every engine pulls) vs active push (IndexNow —
+  instant, shared, and ignored by Google).
+quizHeading: Ping check
+quiz:
+  - q: Which engine ignores IndexNow and relies on sitemaps + its own crawl schedule?
+    options: [Bing, Yandex, Google, all of them support it equally]
+    correct: 2
+    ok: Right — Google never adopted IndexNow; it uses sitemaps + its own schedule.
+    no: Bing, Yandex, Naver and Seznam take IndexNow — Google is the one that doesn't.
+  - q: What's the core difference between a sitemap and IndexNow?
+    options:
+      - sitemaps are XML, IndexNow is YAML
+      - sitemap = passive list engines pull; IndexNow = active push you send
+      - IndexNow improves rankings; sitemaps don't
+      - they're two names for the same thing
+    correct: 1
+    ok: Correct — passive pull vs active push is the whole distinction.
+    no: 'Format isn''t the point: sitemap = passive list pulled; IndexNow = active push sent.'
+  - q: Why must the IndexNow key live in a file at your site root?
+    options:
+      - so the engine can verify you own the host before trusting the push
+      - to compress the urlList
+      - because Google requires it
+      - to set the lastmod date
+    correct: 0
+    ok: Yes — the key file proves host ownership, same trust model as robots.txt.
+    no: It's host verification — the engine fetches the key file to confirm you own the site.
+  - q: Your single sitemap just passed 50,000 URLs. What does the spec require next?
+    options:
+      - switch to IndexNow instead
+      - delete the oldest URLs
+      - nothing — 50k is only a suggestion
+      - split it and add a sitemap index (a sitemap of sitemaps)
+    correct: 3
+    ok: Correct — split into multiple sitemaps and reference them from a sitemap index.
+    no: Past 50,000 URLs the spec requires splitting + a sitemap index.
+primarySource:
+  url: https://www.sitemaps.org/protocol.html
+  label: '"The Sitemap protocol" — sitemaps.org'
+  minutes: 12
+  note: >-
+    The authoritative spec: tags, the 50,000-URL / 50 MB limits, W3C date format,
+    single-host rule. Pair with Google's <a href="https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap">"Build
+    and submit a sitemap"</a> for submission, and the <a href="https://www.indexnow.org/documentation">IndexNow protocol docs</a> (key
+    + payload). Google's non-participation is tracked in <a href="/resources/">RESOURCES</a>.
+footnotes:
+  - 'sitemaps.org, <a href="https://www.sitemaps.org/protocol.html">"The Sitemap protocol"</a> — 50,000 URLs / 50 MB per file, loc required, W3C dates, single host.'
+  - 'IndexNow, <a href="https://www.indexnow.org/documentation">protocol docs</a> — POST host/key/keyLocation/urlList, ≤10,000 URLs/post, shared with all participating engines.'
+  - 'Google does not participate in IndexNow (verified June 2026); it uses sitemaps + its own crawl scheduling, with the Indexing API limited to JobPosting/livestream. See RESOURCES.'
+---
+import Callout from '../../components/lesson/Callout.astro';
+import Runbox from '../../components/lesson/Runbox.astro';
+import TwoCol from '../../components/lesson/TwoCol.astro';
+
+<p class="recap">Recap from <a href="/lessons/0006-the-js-rendering-gap.html">Lesson 0006</a>: we made sure your content is actually <em>in</em> the HTML the server sends. Now the page exists and renders. But an engine still has to <em>find out</em> it exists, or changed. That discovery step is its own pipeline stage — and it's the most automatable one in the whole course.</p>
+
+<p class="lede">Two notification mechanisms, and the asymmetry is the lesson. A <b>sitemap</b> is <em>passive</em>: a list of your URLs the engine pulls when it feels like it — slow, but universal, Google included. <b>IndexNow</b> is <em>active</em>: you POST changed URLs and participating engines fetch within minutes, then share the ping with each other.<sup>[2]</sup> The catch: <b>Google doesn't participate in IndexNow</b> — it relies on its own crawl scheduling plus your sitemap.<sup>[3]</sup> So a real publishing pipeline fires both.</p>
+
+<Callout variant="win" lead="Your win:">`sitemap_ping.py` <em>generates</em> a spec-valid `sitemap.xml` from a URL list, <em>validates</em> an existing one against the real sitemaps.org limits, and <em>builds</em> a correct IndexNow payload (key + keyLocation + urlList) — the exact two calls a publish hook should make.</Callout>
+
+## Who listens to what
+
+| Mechanism | Google | Bing / Yandex / Naver / Seznam | Speed |
+|-----------|--------|--------------------------------|-------|
+| **`sitemap.xml`** (passive pull) | yes | yes | slow — on the engine's schedule |
+| **IndexNow** (active push) | no — ignores it<sup>[3]</sup> | yes — shared across all<sup>[2]</sup> | minutes |
+
+Why a builder cares about the engines Google snubs: several of them feed <em>AI</em> answers (Bing's index sits behind Copilot and others), so an instant IndexNow push is partly an <span class="tag aeo">AEO</span> discovery move, not just classic SEO.
+
+<TwoCol
+  cols={[
+    {
+      h: 'sitemap.xml — the passive list',
+      tag: 'seo',
+      body: `One file, ≤ <b>50,000 URLs</b> and ≤ <b>50 MB</b> uncompressed. Required tag: <code>&lt;loc&gt;</code>. Optional <code>&lt;lastmod&gt;</code> (W3C date).<sup>[1]</sup><br /><br />All URLs must be on <b>one host</b>. Submit once via Search Console or <code>robots.txt</code>; re-fetched on Google's schedule.<br /><br /><em>✓ universal · ✗ slow, no "it changed!" signal</em>`,
+    },
+    {
+      h: 'IndexNow — the active push',
+      tag: 'aeo',
+      body: `POST <code>{host, key, keyLocation, urlList}</code> to the endpoint, ≤ <b>10,000 URLs</b> per call.<sup>[2]</sup><br /><br />Key = 8–128 chars <code>[a-zA-Z0-9-]</code>, hosted in a text file at your root so the engine can verify you own the site.<br /><br /><em>✓ instant + shared · ✗ Google not included</em>`,
+    },
+  ]}
+/>
+
+## The tool: build, validate, push
+
+Both halves are pure data transforms — perfect for a publish hook, and offline-testable. The IndexNow side validates everything <em>before</em> it would ever hit the network:
+
+```text
+# IndexNow payload is built + checked offline; --send is the only network call
+key matches  ^[A-Za-z0-9-]{8,128}$     # or it's rejected
+all URLs share one host                # keyLocation must be on it too
+<= 10,000 URLs per post
+# sitemap side: well-formed, <=50k URLs, <=50MB, one host, valid lastmod
+```
+
+That generated `sitemap.xml` is plain spec-valid XML — one `<loc>` per URL, optional `<lastmod>`, all on one host:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://yoursite.com/new-page</loc>
+    <lastmod>2026-06-22</lastmod>
+  </url>
+</urlset>
+```
+
+…and the IndexNow dry run prints the exact POST body before any `--send`:
+
+```json
+{
+  "host": "yoursite.com",
+  "key": "a1b2c3d4e5f6a7b8",
+  "keyLocation": "https://yoursite.com/a1b2c3d4e5f6a7b8.txt",
+  "urlList": ["https://yoursite.com/new-page"]
+}
+```
+
+<Callout variant="do" lead="Do this now:">
+
+1. Self-check (offline): `python3 tools/sitemap_ping.py --demo`
+2. Make a `urls.txt` (one URL per line, optional tab + lastmod), generate + validate: `python3 tools/sitemap_ping.py gen urls.txt > sitemap.xml` then `python3 tools/sitemap_ping.py check sitemap.xml`
+3. Build an IndexNow push (dry run — prints the key-file step + the exact POST body): `python3 tools/sitemap_ping.py indexnow https://yoursite.com/new-page --key <your-key>`
+
+</Callout>
+
+<Runbox
+  cmd="python3 tools/sitemap_ping.py check sitemap.xml"
+  heading="Sitemap check"
+  rows={[
+    { mark: 'PASS', label: 'well-formed XML' },
+    { mark: 'PASS', label: 'root is <urlset>' },
+    { mark: 'PASS', label: 'every <url> has a <loc>  (412 urls)' },
+    { mark: 'PASS', label: '<= 50,000 URLs  (412)' },
+    { mark: 'PASS', label: '<= 50 MB uncompressed' },
+    { mark: 'FAIL', label: 'all URLs share one host  (site.com, cdn.site.com)' },
+    { mark: 'FAIL', label: "lastmod dates valid (W3C)  (2 bad: ['19/06/2026'])" },
+  ]}
+  verdict="2 problem(s) — engines may reject it."
+/>
+
+<Callout variant="gotcha" lead="Three pipeline traps.">(1) <b>IndexNow ≠ Google.</b> Pinging IndexNow and watching nothing happen in Google is expected — Google never took it.<sup>[3]</sup> Google's only push API is the <em>Indexing API</em>, limited to `JobPosting` and livestream pages; for everything else it's sitemap + crawl schedule, with a manual "Request indexing" in Search Console. (2) <b>The key file must actually be reachable</b> at `keyLocation` and contain the key, or every push is rejected — same trust model as `robots.txt`. (3) <b>A sitemap is discovery, not a ranking lever.</b> Listing a URL gets it <em>found</em>; it does nothing for whether it ranks or gets cited. Don't expect traffic from a sitemap alone.</Callout>
+
+<p class="fineprint">Ceiling to know: `sitemap_ping.py` writes a single sitemap; past 50k URLs you need a <em>sitemap index</em> (a sitemap of sitemaps) — noted in the tool as the next upgrade. It defaults IndexNow to a dry run; `--send` is the one line that touches the network.</p>
