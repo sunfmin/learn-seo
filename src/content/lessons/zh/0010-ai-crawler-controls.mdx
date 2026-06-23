@@ -1,0 +1,150 @@
+---
+num: '0010'
+title: 谁有资格拿你来训练
+kicker: 第 0010 课 · AI crawler 控制
+sub: >-
+  经典 SEO 只需讨好一个 bot。AI 时代多出了一整群——还多了一个按厂商来做的决定：
+  拿我训练、引用我、还是都不行？
+blurb: >-
+  AI crawler 的分类（train 训练 / retrieve 检索 / user-fetch 用户触发）、Google-Extended
+  的陷阱、为什么 robots.txt 是自愿遵守的，以及 llms.txt 到底处于什么状态。
+quizHeading: 报告姿态，而非对错
+quiz:
+  - q: <code>robots.txt</code> 里的 <code>Google-Extended</code> 控制的是……
+    options:
+      - 你的内容是否用于训练 Gemini / Vertex
+      - 你是否出现在 Google Search 里
+      - AI Overviews 能否引用你
+      - 你的 crawl budget（抓取预算）
+    correct: 0
+    ok: 对——它是训练层面的 opt-out（退出）；Search 和 AI Overviews 不受影响。
+    no: Google-Extended 只是训练控制——屏蔽它并不会把你从 Search 里移除。
+  - q: 你想让 ChatGPT 和 Perplexity <em>引用（cite）</em>你，但不想被<em>训练（train）</em>。你应该……
+    options:
+      - 放行 retrieve（检索）bot，屏蔽 train（训练）bot
+      - 屏蔽所有 AI bot
+      - 放行所有 AI bot
+      - 用 llms.txt 代替 robots.txt
+    correct: 0
+    ok: 是的——citation 来自 retrieve；训练是另一次可以单独拒绝的抓取。
+    no: 被引用需要放行 retrieve bot；只拒绝训练用的 crawler。
+  - q: 某个 crawler 无视你的 <code>robots.txt</code> 照爬不误。所以 robots.txt 是……
+    options:
+      - 自愿遵守的——只有愿意守规矩的 bot 才认它
+      - 对每个 crawler 都有法律约束力
+      - 由你的 web 服务器自动强制执行
+      - 对未知 bot 加密的
+    correct: 0
+    ok: 正确——robots.txt 是请求，不是墙。真正的强制要靠 WAF / 限流。
+    no: robots.txt 只是建议；bot 必须自己选择遵守。要真拦住，就在服务器端屏蔽。
+  - q: <code>llms.txt</code> 是……
+    options:
+      - 一个被提出、非标准、被 Google 称为不必要的文件
+      - 一个 Google 官方标准
+      - 出现在 AI Overviews 里的必要条件
+      - robots.txt 的直接替代品
+    correct: 0
+    ok: 对——它是个未获批准的提案，没有引擎背书。
+    no: llms.txt 不是标准；没有任何主流引擎强制执行它。
+primarySource:
+  url: https://developers.google.com/search/docs/appearance/ai-features
+  label: '“AI features and your website” — Google Search Central'
+  minutes: 12
+  note: >-
+    Google 正式说明 AI 功能如何挑选内容、以及如何控制是否被纳入——为 Google-Extended
+    这条区分提供依据的一手来源。
+footnotes:
+  - 'Google Search Central, <a href="https://developers.google.com/search/docs/appearance/ai-features">“AI features and your website”</a>（控制项 + Google-Extended 的区分）。'
+  - 'robots.txt 在设计上就是建议性的——按 robots 排除协议，遵守是自愿的；强制执行是服务器端的事。'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+
+<p class="recap">回顾：<a href="/zh/lessons/0002-crawlable-vs-indexable.html">第 0002 课</a>用 `robots.txt` 控制<em>一个</em> crawler——Googlebot。这一课用同一个文件回答一个 Googlebot 从未提出的问题：如今有十几个 AI crawler 在抓你的页面，<b>你放哪些进来、又为了什么目的？</b></p>
+
+<p class="lede">这里没有 PASS/FAIL。放行还是屏蔽一个 AI crawler 是<b>策略选择</b>，不是 bug——所以目标是<em>把你当前的姿态看清楚</em>，并有意识地设定它，而不是继承你的 CMS 出厂时给的默认值。</p>
+
+<Callout variant="win" lead="本课收获：">读出你的站点对每个主流 AI crawler 的确切 ALLOW/BLOCK 姿态——并理解那条决定“屏蔽到底帮了你、还是悄悄让你丢掉 citation”的关键区分（train 对 retrieve）。</Callout>
+
+## 一次抓取可以干三种不同的活
+
+误区是把“AI bot”当成一个东西。一次抓取落在三个桶之一，而你对每个桶的态度可以不同：
+
+| 用途 | 这次抓取喂给什么 | 例子 bot |
+|------|------------------|----------|
+| **train（训练）** | 模型的训练语料 | `GPTBot`、`Google-Extended`、`CCBot`、`ClaudeBot`、`Bytespider` |
+| **retrieve（检索）** | 一个它将<em>引用</em>的实时答案 | `OAI-SearchBot`、`PerplexityBot` |
+| **user-fetch（用户触发）** | 用户主动要的某一个页面 | `ChatGPT-User`、`Claude-Web` |
+
+<Callout variant="insight" lead="真正要做的决定：">citation——来自<a href="/zh/lessons/0001-the-two-pipelines.html">第 0001 课</a>的那个 AEO 赢点——来自 <b>retrieve</b> bot。训练来自 <b>train</b> bot。它们是<em>不同的 crawler</em>，所以你可以拒绝训练、同时仍然可被引用。屏蔽 train bot，放行 retrieve bot：退出语料库，又不在答案里隐身。</Callout>
+
+<TwoCol
+  cols={[
+    {
+      h: '屏蔽以退出训练',
+      tag: 'seo',
+      body: '<p>Disallow <code>GPTBot</code>、<code>Google-Extended</code>、<code>CCBot</code>、<code>ClaudeBot</code>。</p><span class="tagline good">你的内容不再喂给模型训练。</span>',
+    },
+    {
+      h: '放行以保持可被引用',
+      tag: 'aeo',
+      body: '<p>保持 <code>OAI-SearchBot</code>、<code>PerplexityBot</code> 和 Googlebot 开放。</p><span class="tagline good">你仍有资格被 retrieve 并在答案里被引用。</span>',
+    },
+  ]}
+/>
+
+<Callout variant="gotcha" lead="Google-Extended 的陷阱：">`Google-Extended` 只控制你的内容是否用于训练 <b>Gemini / Vertex AI</b>。它<u>不</u>影响 Google Search，也<u>不</u>控制 AI Overviews——后两者走正常的 indexing。<sup>[1]</sup> 为了“把 AI 挡在外面”而屏蔽 `Google-Extended`，并不会把你从 Search 里移除，也阻止不了 AI Overviews 引用你已 index 的页面。它和大家以为的是不同的杠杆。</Callout>
+
+## robots.txt 是请求，不是墙
+
+这里的每一条指令都是**自愿遵守**的。守规矩的 crawler 会读 `robots.txt` 并照办；恶意 scraper 则完全无视它。<sup>[2]</sup> 如果你必须*强制*一个屏蔽，那是服务器端的活——WAF、限流、或按 UA/IP 的规则——而不是文本文件里的一行。
+
+```text
+# robots.txt — opt out of training, stay citable
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: OAI-SearchBot
+Allow: /          # keep retrieval open → still citable
+```
+
+<Callout variant="note" lead="关于 llms.txt：">你会看到有人把 `llms.txt` 吹成“给 AI 的 robots.txt”。它是个<b>提案，不是标准</b>——没有主流引擎强制执行，Google 也公开说过它没必要。想放就放（无害），但别把它当成一个今天真能起作用的控制项。</Callout>
+
+## 技能：读出你的姿态
+
+`tools/ai_bots.py` 像每个 AI crawler 那样读你的 `robots.txt`——用 `urllib.robotparser` 按 user-agent 回答 `can_fetch(bot, "/")`——并探测 `llms.txt`。
+
+```python
+# the heart of it — ask robots.txt, once per AI bot
+rp = urllib.robotparser.RobotFileParser()
+rp.parse(robots_text.splitlines())
+for ua, vendor, kind in AI_BOTS:
+    posture = "ALLOW" if rp.can_fetch(ua, "/") else "BLOCK"
+```
+
+<Callout variant="do" lead="现在就做——">
+1. 离线自检：`python3 tools/ai_bots.py --demo`
+2. 读出你自己的姿态：`python3 tools/ai_bots.py https://your-site.example/`
+3. 有意识地决定：你是否在控制**训练**（train bot 按需设置）的同时保持**可被引用**（retrieve bot 放行）？去设定它，别继承它。
+</Callout>
+
+<Runbox
+  cmd="python3 tools/ai_bots.py https://acme.test/"
+  heading="AI-crawler posture: https://acme.test"
+  rows={[
+    { mark: 'FAIL', label: 'BLOCK · OpenAI       · GPTBot          train' },
+    { mark: 'PASS', label: 'ALLOW · OpenAI       · OAI-SearchBot   retrieve' },
+    { mark: 'PASS', label: 'ALLOW · Anthropic    · ClaudeBot       train' },
+    { mark: 'FAIL', label: 'BLOCK · Google       · Google-Extended train' },
+    { mark: 'PASS', label: 'ALLOW · Perplexity   · PerplexityBot   retrieve' },
+    { mark: 'FAIL', label: 'BLOCK · Common Crawl · CCBot           train' },
+    { mark: 'WARN', label: 'none  · (extra)      · llms.txt        non-standard' },
+  ]}
+  verdict="8/12 AI crawlers allowed. robots.txt is voluntary — only honored by bots that choose to."
+/>
+
+<p class="fineprint">要知道的天花板：这报告的是<em>声明的</em>姿态，而非强制执行后的现实——无视 `robots.txt` 的 bot 会径直绕过它。而且 bot 名单是动态的；厂商会新增和重命名 crawler，所以把这份名册当作“截至目前”，而非永久。工具替你回答不了、却唯一要紧的那个问题是：<b>你想让什么被拿去训练，又想让什么被引用？</b></p>

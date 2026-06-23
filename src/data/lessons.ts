@@ -67,6 +67,12 @@ export const tools: Tool[] = [
       zh: '集大成之作：从一个种子 URL 起按 BFS（广度优先）crawl（抓取）整个站点，对每个页面跑 0002–0008 的所有 gate（关卡），再把结果汇总成一份带优先级的报告（某项检查在全站失败 = 模板 bug）。',
     },
     run: 'python3 tools/site_audit.py --demo' },
+  { name: 'ai_bots.py', lesson: '0010',
+    desc: {
+      en: "Reports your site's ALLOW/BLOCK posture toward AI crawlers (GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot…) from robots.txt, and whether you ship the non-standard llms.txt. Posture, not pass/fail.",
+      zh: '从 robots.txt 读出你的站点对 AI crawler（GPTBot、ClaudeBot、Google-Extended、PerplexityBot、CCBot……）的 ALLOW/BLOCK 姿态，以及你是否提供了非标准的 llms.txt。报告的是姿态，而非对错。',
+    },
+    run: 'python3 tools/ai_bots.py --demo' },
 ];
 
 /** Tools belonging to a lesson (e.g. the lesson card's "▸ tool" label). */

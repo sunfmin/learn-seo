@@ -1,0 +1,150 @@
+---
+num: '0010'
+title: Who Gets to Train on You
+kicker: Lesson 0010 · AI crawler controls
+sub: >-
+  Classic SEO had one bot to please. The AI era added a zoo of them — and a new
+  decision per vendor: train on me, cite me, or neither?
+blurb: >-
+  The AI crawler taxonomy (train vs retrieve vs user-fetch), the Google-Extended
+  trap, why robots.txt is voluntary, and where llms.txt actually stands.
+quizHeading: Posture, not pass/fail
+quiz:
+  - q: <code>Google-Extended</code> in your <code>robots.txt</code> controls…
+    options:
+      - whether your content trains Gemini / Vertex
+      - whether you appear in Google Search
+      - whether AI Overviews can cite you
+      - your crawl budget
+    correct: 0
+    ok: 'Right — it is a training opt-out; Search and AI Overviews are unaffected.'
+    no: Google-Extended is a training control only — blocking it does not remove you from Search.
+  - q: You want ChatGPT and Perplexity to <em>cite</em> you, but not <em>train</em> on you. You should…
+    options:
+      - allow the retrieval bots, block the training bots
+      - block every AI bot
+      - allow every AI bot
+      - rely on llms.txt instead of robots.txt
+    correct: 0
+    ok: Yes — citations come from retrieval; training is a separate fetch you can refuse.
+    no: Citation needs the retrieval bots allowed; refuse only the training crawlers.
+  - q: A crawler ignores your <code>robots.txt</code> and scrapes anyway. So robots.txt is…
+    options:
+      - voluntary — only honored by bots that choose to
+      - legally binding on every crawler
+      - enforced by your web server automatically
+      - encrypted against unknown bots
+    correct: 0
+    ok: 'Correct — robots.txt is a request, not a wall. Real enforcement needs a WAF / rate limits.'
+    no: robots.txt is advisory; a bot must choose to obey. Block at the server to actually stop it.
+  - q: <code>llms.txt</code> is…
+    options:
+      - a proposed, non-standard file Google calls unnecessary
+      - an official Google standard
+      - required to appear in AI Overviews
+      - a drop-in replacement for robots.txt
+    correct: 0
+    ok: 'Right — it is an unratified proposal, not engine-backed.'
+    no: llms.txt is not a standard; no major engine enforces it.
+primarySource:
+  url: https://developers.google.com/search/docs/appearance/ai-features
+  label: '“AI features and your website” — Google Search Central'
+  minutes: 12
+  note: >-
+    Google on the record about how AI features pick content and how to control
+    inclusion — the primary source that grounds the Google-Extended distinction.
+footnotes:
+  - 'Google Search Central, <a href="https://developers.google.com/search/docs/appearance/ai-features">“AI features and your website”</a> (controls + the Google-Extended distinction).'
+  - 'robots.txt is advisory by design — compliance is voluntary per the robots exclusion protocol; enforcement is a server-side concern.'
+---
+import Callout from '../../../components/lesson/Callout.astro';
+import Runbox from '../../../components/lesson/Runbox.astro';
+import TwoCol from '../../../components/lesson/TwoCol.astro';
+
+<p class="recap">Recap: <a href="/lessons/0002-crawlable-vs-indexable.html">Lesson 0002</a> used `robots.txt` to control <em>one</em> crawler — Googlebot. This lesson uses the same file to answer a question Googlebot never raised: now that a dozen AI crawlers fetch your pages, <b>which of them do you let in, and for what?</b></p>
+
+<p class="lede">There is no PASS/FAIL here. Allowing or blocking an AI crawler is a <b>policy choice</b>, not a bug — so the goal is to <em>see your current posture</em> clearly and set it deliberately, instead of inheriting whatever default your CMS shipped.</p>
+
+<Callout variant="win" lead="Your win:">read your site's exact ALLOW/BLOCK posture toward every major AI crawler — and understand the one distinction (train vs retrieve) that decides whether blocking helps you or quietly costs you citations.</Callout>
+
+## A fetch can do three different jobs
+
+The mistake is treating "AI bots" as one thing. A fetch falls into one of three buckets, and you may feel differently about each:
+
+| Job | What the fetch feeds | Example bots |
+|-----|----------------------|--------------|
+| **train** | a model's training corpus | `GPTBot`, `Google-Extended`, `CCBot`, `ClaudeBot`, `Bytespider` |
+| **retrieve** | a live answer it will *cite* | `OAI-SearchBot`, `PerplexityBot` |
+| **user-fetch** | one page a user asked for | `ChatGPT-User`, `Claude-Web` |
+
+<Callout variant="insight" lead="The decision that matters:">citations — the whole AEO win from <a href="/lessons/0001-the-two-pipelines.html">Lesson 0001</a> — come from the <b>retrieve</b> bots. Training comes from the <b>train</b> bots. They are <em>separate crawlers</em>, so you can refuse training and still be citable. Block the train bots, keep the retrieve bots open: opt out of the corpus without going invisible in answers.</Callout>
+
+<TwoCol
+  cols={[
+    {
+      h: 'Block to opt out of training',
+      tag: 'seo',
+      body: '<p>Disallow <code>GPTBot</code>, <code>Google-Extended</code>, <code>CCBot</code>, <code>ClaudeBot</code>.</p><span class="tagline good">Your content stops feeding model training.</span>',
+    },
+    {
+      h: 'Allow to stay citable',
+      tag: 'aeo',
+      body: '<p>Keep <code>OAI-SearchBot</code>, <code>PerplexityBot</code>, and Googlebot open.</p><span class="tagline good">You remain eligible to be retrieved and cited in answers.</span>',
+    },
+  ]}
+/>
+
+<Callout variant="gotcha" lead="The Google-Extended trap:">`Google-Extended` controls only whether your content trains <b>Gemini / Vertex AI</b>. It does <u>not</u> affect Google Search, and it does <u>not</u> control AI Overviews — those follow normal indexing.<sup>[1]</sup> Blocking `Google-Extended` to "keep AI out" does not remove you from Search, and does not stop AI Overviews from quoting your indexed pages. Different lever than people think.</Callout>
+
+## robots.txt is a request, not a wall
+
+Every directive here is **voluntary**. A well-behaved crawler reads `robots.txt` and obeys; a hostile scraper ignores it entirely.<sup>[2]</sup> If you must *enforce* a block, that's a server-side job — a WAF, rate limits, or UA/IP rules — not a line in a text file.
+
+```text
+# robots.txt — opt out of training, stay citable
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: OAI-SearchBot
+Allow: /          # keep retrieval open → still citable
+```
+
+<Callout variant="note" lead="On llms.txt:">you'll see `llms.txt` pitched as "robots.txt for AI." It's a <b>proposal, not a standard</b> — no major engine enforces it, and Google has publicly called it unnecessary. Ship one if you like (it's harmless), but don't mistake it for a control that does anything today.</Callout>
+
+## The skill: read your posture
+
+`tools/ai_bots.py` reads your `robots.txt` the way each AI crawler would — `urllib.robotparser` answers `can_fetch(bot, "/")` per user-agent — and probes for `llms.txt`.
+
+```python
+# the heart of it — ask robots.txt, once per AI bot
+rp = urllib.robotparser.RobotFileParser()
+rp.parse(robots_text.splitlines())
+for ua, vendor, kind in AI_BOTS:
+    posture = "ALLOW" if rp.can_fetch(ua, "/") else "BLOCK"
+```
+
+<Callout variant="do" lead="Do this now —">
+1. Self-check offline: `python3 tools/ai_bots.py --demo`
+2. Read your own posture: `python3 tools/ai_bots.py https://your-site.example/`
+3. Decide deliberately: are you **citable** (retrieve bots allowed) while controlling **training** (train bots set to taste)? Set it; don't inherit it.
+</Callout>
+
+<Runbox
+  cmd="python3 tools/ai_bots.py https://acme.test/"
+  heading="AI-crawler posture: https://acme.test"
+  rows={[
+    { mark: 'FAIL', label: 'BLOCK · OpenAI       · GPTBot          train' },
+    { mark: 'PASS', label: 'ALLOW · OpenAI       · OAI-SearchBot   retrieve' },
+    { mark: 'PASS', label: 'ALLOW · Anthropic    · ClaudeBot       train' },
+    { mark: 'FAIL', label: 'BLOCK · Google       · Google-Extended train' },
+    { mark: 'PASS', label: 'ALLOW · Perplexity   · PerplexityBot   retrieve' },
+    { mark: 'FAIL', label: 'BLOCK · Common Crawl · CCBot           train' },
+    { mark: 'WARN', label: 'none  · (extra)      · llms.txt        non-standard' },
+  ]}
+  verdict="8/12 AI crawlers allowed. robots.txt is voluntary — only honored by bots that choose to."
+/>
+
+<p class="fineprint">Ceiling to know: this reports <em>declared</em> posture, not enforced reality — a bot that ignores `robots.txt` sails right past it. And the bot list is a moving target; vendors add and rename crawlers, so treat the roster as current-as-of, not permanent. The question the tool can't answer for you is the only one that matters: <b>what do you want trained on, and what do you want cited?</b></p>

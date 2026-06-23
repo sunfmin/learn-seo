@@ -125,6 +125,25 @@ def test_site_audit_crawl():
     assert bad["exactly one <h1>"] is False
 
 
+def test_ai_bots_posture():
+    # ai_bots.report driven through the fetch seam: robots.txt blocks GPTBot,
+    # llms.txt is present. No network.
+    import ai_bots
+    robots = "User-agent: GPTBot\nDisallow: /\n\nUser-agent: *\nAllow: /\n"
+    site = {
+        "https://demo.test/robots.txt": Response(url="https://demo.test/robots.txt", status=200, body=robots),
+        "https://demo.test/llms.txt": Response(url="https://demo.test/llms.txt", status=200, body="# llms"),
+    }
+    rows, llms = ai_bots.report(
+        "https://demo.test/",
+        fetcher=lambda url, **kw: fetch(url, transport=fixture(site), **kw),
+    )
+    d = {ua: ok for ua, _, _, ok in rows}
+    assert d["GPTBot"] is False        # explicitly blocked
+    assert d["ClaudeBot"] is True      # unlisted → wildcard → allowed
+    assert llms is True                # llms.txt served
+
+
 def main():
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     for name, fn in tests:
