@@ -12,10 +12,27 @@ JSON-LD valid? is the page client-rendered?) stays in the tools / seolib.ld.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
 
 _HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
+
+# CJK (Chinese/Japanese/Korean) is written without spaces between words, so
+# whitespace-splitting undercounts it catastrophically — a whole Chinese
+# sentence collapses to a single "word", making every CJK page look thin and
+# failing the body-text gate spuriously. Count each CJK codepoint as one word
+# and whitespace-split only the remaining (Latin/number) text. Latin-only text
+# is unaffected (no CJK chars -> identical to the old data.split()).
+_CJK = re.compile(
+    r"[぀-ヿ㐀-䶿一-鿿豈-﫿가-힯ｦ-ﾟ]"
+)
+
+
+def _count_words(text):
+    cjk = _CJK.findall(text)
+    latin = _CJK.sub(" ", text).split()
+    return len(cjk) + len(latin)
 
 
 @dataclass
@@ -26,7 +43,7 @@ class Page:
     rel_author: bool      # any <a|link rel="author">
     links: list           # every <a href> value
     headings: dict         # {"h1": n, ...} only for levels present
-    words: int            # visible words (excludes title, script, style, ld+json)
+    words: int            # visible words; CJK counted per-codepoint (excludes title, script, style, ld+json)
     ld_blocks: list       # raw application/ld+json script bodies
 
 
@@ -103,7 +120,7 @@ class _Scan(HTMLParser):
             if t:
                 self.title = (self.title or "") + t
         else:
-            self.words += len(data.split())
+            self.words += _count_words(data)
 
 
 def parse(html):
